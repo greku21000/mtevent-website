@@ -56,6 +56,8 @@ export default function Home() {
   const [formStatus, setFormStatus] = useState<"idle"|"loading"|"success"|"error">("idle");
 
   const langTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const bannerImgRef = useRef<HTMLDivElement>(null);
   const t = translations[lang];
 
   // ── Language fade transition ──
@@ -70,16 +72,79 @@ export default function Home() {
     }, 320);
   }, [lang, langPhase]);
 
-  // ── Scroll: navbar opacity + progress bar ──
+  // ── Scroll: navbar opacity + progress bar + banner parallax ──
   useEffect(() => {
+    let raf = 0;
     const onScroll = () => {
-      const sy = window.scrollY;
-      setScrolled(sy > 60);
-      const total = document.body.scrollHeight - window.innerHeight;
-      setScrollProgress(total > 0 ? sy / total : 0);
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const sy = window.scrollY;
+        setScrolled(sy > 60);
+        const total = document.body.scrollHeight - window.innerHeight;
+        setScrollProgress(total > 0 ? sy / total : 0);
+
+        // Parallax: banner image moves 25% of the section's scroll velocity
+        if (bannerRef.current && bannerImgRef.current) {
+          const rect = bannerRef.current.getBoundingClientRect();
+          const vh = window.innerHeight;
+          if (rect.bottom > 0 && rect.top < vh) {
+            const progress = (vh - rect.top) / (vh + rect.height);
+            const translate = (progress - 0.5) * 120; // -60 .. +60 px
+            bannerImgRef.current.style.transform = `translate3d(0, ${translate}px, 0) scale(1.15)`;
+          }
+        }
+      });
     };
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  // ── Custom gold cursor follower (desktop only) ──
+  useEffect(() => {
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+    const dot = document.createElement("div");
+    const ring = document.createElement("div");
+    dot.className = "mt-cursor-dot";
+    ring.className = "mt-cursor-ring";
+    document.body.appendChild(dot);
+    document.body.appendChild(ring);
+
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let rx = mx, ry = my;
+    let rafId = 0;
+
+    const tick = () => {
+      rx += (mx - rx) * 0.18;
+      ry += (my - ry) * 0.18;
+      dot.style.transform = `translate(${mx}px, ${my}px)`;
+      ring.style.transform = `translate(${rx}px, ${ry}px)`;
+      rafId = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e: MouseEvent) => { mx = e.clientX; my = e.clientY; };
+    const onOver = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest("button, a, [data-cursor='zoom']")) {
+        ring.classList.add("mt-cursor-ring--hover");
+      } else {
+        ring.classList.remove("mt-cursor-ring--hover");
+      }
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseover", onOver);
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseover", onOver);
+      dot.remove(); ring.remove();
+    };
   }, []);
 
   // ── Active section tracker ──
@@ -389,8 +454,12 @@ export default function Home() {
             <p style={{ color: GOLD, fontSize: "0.6rem", letterSpacing: "0.6em", textTransform: "uppercase", marginBottom: "2rem", animation: "heroFadeUp 1.2s 0.2s both" }}>
               Italy · {lang === "en" ? "Est. 2025" : "Dal 2025"}
             </p>
-            <h1 style={{ color: "#f5f0e8", fontSize: "clamp(3rem, 8vw, 7rem)", fontWeight: 300, letterSpacing: "0.04em", lineHeight: 1.05, marginBottom: "1.5rem", animation: "heroFadeUp 1.2s 0.4s both" }}>
-              {t.hero.tagline}
+            <h1 key={`h-${lang}`} className="hero-headline" style={{ color: "#f5f0e8", fontSize: "clamp(3rem, 8vw, 7rem)", fontWeight: 300, letterSpacing: "0.04em", lineHeight: 1.05, marginBottom: "1.5rem" }}>
+              {t.hero.tagline.split(" ").map((word, i) => (
+                <span key={i} className="word-wrap">
+                  <span className="word-inner" style={{ animationDelay: `${0.4 + i * 0.14}s` }}>{word}&nbsp;</span>
+                </span>
+              ))}
             </h1>
             <div style={{ width: 50, height: 1, background: GOLD, margin: "0 auto 2rem", animation: "heroFadeUp 1.2s 0.6s both" }} />
             <p style={{ color: "#bbb", fontSize: "clamp(0.8rem, 2vw, 1rem)", letterSpacing: "0.22em", fontWeight: 300, marginBottom: "3.5rem", animation: "heroFadeUp 1.2s 0.7s both" }}>
@@ -446,11 +515,40 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── FULLWIDTH BANNER ── */}
-        <div style={{ position: "relative", height: 520, overflow: "hidden" }}>
-          <Image src="/images/photo_10_2026-05-16_14-37-06.jpg" alt="Ceremony" fill style={{ objectFit: "cover", objectPosition: "center 30%" }} />
+        {/* ── MARQUEE STRIP (Eva-inspired infinite scroll) ── */}
+        <div className="marquee-wrap" aria-hidden="true">
+          <div className="marquee-track">
+            {Array.from({ length: 2 }).map((_, copy) => (
+              <div key={copy} className="marquee-group">
+                {[
+                  lang === "en" ? "Destination Weddings" : "Destination Wedding",
+                  "Italy",
+                  lang === "en" ? "Luxury Planning" : "Pianificazione di Lusso",
+                  lang === "en" ? "Lake Como" : "Lago di Como",
+                  lang === "en" ? "Beyond Your Expectations" : "Oltre le tue Aspettative",
+                  "Venice", "Tuscany", "Amalfi",
+                ].map((text, i) => (
+                  <span key={`${copy}-${i}`} className="marquee-item">
+                    <span>{text}</span>
+                    <span className="marquee-star">✦</span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── FULLWIDTH BANNER (parallax + curtain reveal) ── */}
+        <div ref={bannerRef} className="banner-wrap" style={{ position: "relative", height: 560, overflow: "hidden" }}>
+          <div ref={bannerImgRef} style={{ position: "absolute", inset: "-15% 0", willChange: "transform" }}>
+            <Image src="/images/photo_10_2026-05-16_14-37-06.jpg" alt="Ceremony" fill style={{ objectFit: "cover", objectPosition: "center 30%" }} />
+          </div>
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.4) 50%, rgba(10,10,10,0.85) 100%)" }} />
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1.25rem" }}>
+
+          {/* Curtain reveal — gold sheet slides away revealing the photo */}
+          <div className="banner-curtain" data-reveal />
+
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1.25rem", zIndex: 3 }}>
             <p data-reveal style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.55em", textTransform: "uppercase" }}>
               {lang === "en" ? "Destination Weddings" : "Destination Wedding"}
             </p>
@@ -556,8 +654,30 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ── MARQUEE (reverse, contact bridge) ── */}
+        <div className="marquee-wrap marquee-wrap--reverse" aria-hidden="true" style={{ borderTop: "none" }}>
+          <div className="marquee-track marquee-track--reverse">
+            {Array.from({ length: 2 }).map((_, copy) => (
+              <div key={copy} className="marquee-group">
+                {[
+                  lang === "en" ? "Let's Plan Together" : "Pianifichiamo Insieme",
+                  lang === "en" ? "Booking 2026" : "Prenotazioni 2026",
+                  lang === "en" ? "Booking 2027" : "Prenotazioni 2027",
+                  "MT Event & Wedding",
+                  lang === "en" ? "Get in Touch" : "Contattaci",
+                ].map((text, i) => (
+                  <span key={`${copy}-${i}`} className="marquee-item marquee-item--ghost">
+                    <span>{text}</span>
+                    <span className="marquee-star">◇</span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ── CONTACT ── */}
-        <section id="contact" style={{ padding: "9rem 2rem", maxWidth: 920, margin: "0 auto" }}>
+        <section id="contact" style={{ padding: "7rem 2rem 9rem", maxWidth: 920, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "4.5rem" }}>
             <p data-reveal style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
               {lang === "en" ? "Get in Touch" : "Contattaci"}
