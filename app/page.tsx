@@ -64,8 +64,8 @@ export default function Home() {
     langTimer.current = setTimeout(() => {
       setLang(newLang);
       setLangPhase("in");
-      langTimer.current = setTimeout(() => setLangPhase("idle"), 600);
-    }, 260);
+      langTimer.current = setTimeout(() => setLangPhase("idle"), 750);
+    }, 320);
   }, [lang, langPhase]);
 
   // ── Scroll: navbar opacity + progress bar ──
@@ -130,7 +130,16 @@ export default function Home() {
   }, [lightboxIdx]);
 
   const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Hero scrolls to absolute top; other sections use scroll-margin-top from CSS
+    if (id === "hero") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      const offset = 96; // matches the floating nav height + breathing room
+      const top = el.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
     setMenuOpen(false);
   };
 
@@ -157,26 +166,31 @@ export default function Home() {
 
   const contentCls = langPhase === "out" ? "lang-out" : langPhase === "in" ? "lang-in" : "";
 
-  // ── NAV BUTTON ──
+  // ── NAV BUTTON (glass pill style) ──
   const NavBtn = ({ id, label }: { id: string; label: string }) => {
     const active = activeSection === id;
     return (
       <button onClick={() => scrollTo(id)} style={{
         background: "none", border: "none", cursor: "pointer",
-        color: active ? GOLD : "#888",
-        fontSize: "0.62rem", letterSpacing: "0.28em", textTransform: "uppercase",
-        transition: "color 0.35s", position: "relative", padding: "4px 0",
+        color: active ? "#f5f0e8" : "rgba(255,255,255,0.55)",
+        fontSize: "0.6rem", letterSpacing: "0.24em", textTransform: "uppercase",
+        fontWeight: 500,
+        transition: "color 0.35s ease",
+        position: "relative", padding: "6px 2px",
       }}
-        onMouseEnter={e => (e.currentTarget.style.color = GOLD)}
-        onMouseLeave={e => (e.currentTarget.style.color = active ? GOLD : "#888")}
+        onMouseEnter={e => { if (!active) e.currentTarget.style.color = "#f5f0e8"; }}
+        onMouseLeave={e => { if (!active) e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
       >
         {label}
+        {/* gold dot indicator */}
         <span style={{
-          position: "absolute", bottom: 0, left: 0, right: 0, height: 1,
+          position: "absolute",
+          bottom: -2, left: "50%",
+          width: 3, height: 3, borderRadius: "50%",
           background: GOLD,
-          transform: active ? "scaleX(1)" : "scaleX(0)",
-          transformOrigin: "left",
-          transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1)",
+          transform: `translateX(-50%) scale(${active ? 1 : 0})`,
+          transition: "transform 0.45s cubic-bezier(0.16,1,0.3,1)",
+          boxShadow: `0 0 8px ${GOLD}`,
         }} />
       </button>
     );
@@ -184,90 +198,162 @@ export default function Home() {
 
   return (
     <>
-      {/* ── FIXED NAVBAR ── */}
-      <nav style={{
-        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-        background: scrolled ? "rgba(8,8,8,0.97)" : "rgba(10,10,10,0.6)",
-        backdropFilter: "blur(20px)",
-        borderBottom: `1px solid ${scrolled ? "#222" : "transparent"}`,
-        transition: "background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease",
-        boxShadow: scrolled ? "0 4px 40px rgba(0,0,0,0.5)" : "none",
+      {/* ── FLOATING GLASS PILL NAVBAR ── */}
+      <div style={{
+        position: "fixed",
+        top: scrolled ? 16 : 24,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 50,
+        width: "calc(100% - 24px)",
+        maxWidth: 920,
+        transition: "top 0.6s cubic-bezier(0.16,1,0.3,1)",
+        pointerEvents: "none",
       }}>
-        {/* Gold scroll progress bar */}
-        <div style={{
-          position: "absolute", bottom: 0, left: 0,
-          height: 1,
-          background: `linear-gradient(90deg, ${GOLD}, #e8d5a3)`,
-          width: `${scrollProgress * 100}%`,
-          transition: "width 0.1s linear",
-          opacity: scrolled ? 1 : 0,
-        }} />
+        <nav
+          aria-label="Primary"
+          style={{
+            pointerEvents: "auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.5rem",
+            padding: "10px 14px 10px 22px",
+            borderRadius: 999,
+            background: scrolled
+              ? "rgba(14, 14, 16, 0.72)"
+              : "rgba(20, 20, 22, 0.42)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            backdropFilter: "blur(24px) saturate(180%)",
+            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            boxShadow: scrolled
+              ? "0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)"
+              : "0 14px 44px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+            transition: "background 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease",
+            position: "relative",
+            overflow: "hidden",
+          }}>
+          {/* subtle gold scroll progress baked into the pill */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 16, right: 16, height: 1,
+            background: `linear-gradient(90deg, transparent, ${GOLD} 50%, transparent)`,
+            transform: `scaleX(${scrollProgress})`,
+            transformOrigin: "left",
+            transition: "transform 0.15s linear",
+            opacity: 0.7,
+            pointerEvents: "none",
+          }} />
 
-        <div style={{ maxWidth: 1300, margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
-          <button onClick={() => scrollTo("hero")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ color: GOLD, fontSize: "1.25rem", letterSpacing: "0.2em", fontWeight: 300, lineHeight: 1 }}>MT</span>
-            <span style={{ color: "#555", fontSize: "0.45rem", letterSpacing: "0.4em", textTransform: "uppercase" }}>Event & Wedding</span>
+          {/* Logo */}
+          <button onClick={() => scrollTo("hero")} style={{
+            background: "none", border: "none", cursor: "pointer",
+            display: "flex", flexDirection: "column", gap: 1, paddingRight: 12,
+          }}>
+            <span style={{ color: GOLD, fontFamily: "var(--font-display), serif", fontSize: "1.05rem", letterSpacing: "0.25em", fontWeight: 400, lineHeight: 1 }}>MT</span>
+            <span style={{ color: "rgba(255,255,255,0.42)", fontSize: "0.42rem", letterSpacing: "0.42em", textTransform: "uppercase", fontWeight: 500 }}>Event &amp; Wedding</span>
           </button>
 
-          <div id="desktop-nav" style={{ display: "flex", alignItems: "center", gap: "2.5rem" }}>
+          {/* Desktop nav links */}
+          <div id="desktop-nav" style={{ display: "flex", alignItems: "center", gap: "1.6rem", paddingLeft: 4 }}>
             {navItems.map(({ key, label }) => <NavBtn key={key} id={key} label={label} />)}
+          </div>
 
-            {/* Lang toggle */}
-            <div style={{ display: "flex", gap: 1, marginLeft: 8 }}>
-              {(["en","it"] as Lang[]).map(l => (
+          {/* Right cluster: lang + mobile */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Lang segmented control */}
+            <div style={{
+              display: "flex",
+              position: "relative",
+              padding: 3,
+              background: "rgba(0,0,0,0.35)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 999,
+            }}>
+              {/* Sliding gold pill indicator */}
+              <span style={{
+                position: "absolute",
+                top: 3,
+                bottom: 3,
+                width: "calc(50% - 3px)",
+                left: lang === "en" ? 3 : "calc(50%)",
+                background: `linear-gradient(180deg, ${GOLD}, #b8964a)`,
+                borderRadius: 999,
+                transition: "left 0.5s cubic-bezier(0.7, 0, 0.2, 1)",
+                boxShadow: "0 2px 10px rgba(201,168,76,0.35)",
+                pointerEvents: "none",
+              }} />
+              {(["en", "it"] as Lang[]).map(l => (
                 <button key={l} onClick={() => switchLang(l)}
                   style={{
-                    background: lang === l ? GOLD : "transparent",
-                    color: lang === l ? "#000" : "#555",
-                    border: `1px solid ${lang === l ? GOLD : "#2a2a2a"}`,
-                    padding: "0.22rem 0.6rem",
-                    fontSize: "0.58rem", letterSpacing: "0.12em", textTransform: "uppercase",
-                    cursor: "pointer",
-                    transition: "all 0.35s cubic-bezier(0.16,1,0.3,1)",
+                    position: "relative", zIndex: 1,
+                    background: "transparent", border: "none",
+                    color: lang === l ? "#0a0a0a" : "rgba(255,255,255,0.55)",
+                    padding: "4px 12px",
+                    fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase",
+                    cursor: "pointer", fontWeight: 600,
+                    transition: "color 0.4s ease",
+                    minWidth: 32,
                   }}>
                   {l}
                 </button>
               ))}
             </div>
+
+            {/* Mobile btn */}
+            <button id="mobile-btn" onClick={() => setMenuOpen(o => !o)} aria-label="Menu"
+              style={{
+                display: "none",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 999,
+                cursor: "pointer", color: "#e8d5a3",
+                width: 36, height: 36,
+                alignItems: "center", justifyContent: "center",
+                transition: "background 0.3s",
+              }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                {menuOpen
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />}
+              </svg>
+            </button>
           </div>
+        </nav>
 
-          {/* Mobile btn */}
-          <button id="mobile-btn" onClick={() => setMenuOpen(o => !o)}
-            style={{ display: "none", background: "none", border: "none", cursor: "pointer", color: GOLD, padding: 6 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              {menuOpen
-                ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
-            </svg>
-          </button>
-        </div>
-
-        {/* Mobile menu */}
+        {/* Mobile menu — also glass */}
         <div style={{
+          pointerEvents: menuOpen ? "auto" : "none",
           overflow: "hidden",
-          maxHeight: menuOpen ? 400 : 0,
-          transition: "max-height 0.4s cubic-bezier(0.16,1,0.3,1)",
-          background: "#060606",
-          borderTop: menuOpen ? `1px solid ${BORDER}` : "1px solid transparent",
+          marginTop: 10,
+          maxHeight: menuOpen ? 480 : 0,
+          opacity: menuOpen ? 1 : 0,
+          transform: menuOpen ? "translateY(0)" : "translateY(-8px)",
+          transition: "max-height 0.5s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1)",
+          background: "rgba(14, 14, 16, 0.78)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 18,
+          boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
         }}>
-          <div style={{ padding: "1.5rem 2rem" }}>
+          <div style={{ padding: "1rem 1.5rem 1.25rem" }}>
             {navItems.map(({ key, label }) => (
               <button key={key} onClick={() => scrollTo(key)}
-                style={{ display: "block", width: "100%", textAlign: "left", padding: "0.85rem 0", background: "none", border: "none", borderBottom: `1px solid ${BORDER}`, color: activeSection === key ? GOLD : "#888", fontSize: "0.68rem", letterSpacing: "0.22em", textTransform: "uppercase", cursor: "pointer", transition: "color 0.3s" }}>
-                {label}
+                style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  width: "100%", padding: "0.85rem 0",
+                  background: "none", border: "none", borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  color: activeSection === key ? GOLD : "rgba(255,255,255,0.7)",
+                  fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase",
+                  cursor: "pointer", transition: "color 0.3s",
+                }}>
+                <span>{label}</span>
+                {activeSection === key && <span style={{ color: GOLD, fontSize: "0.6rem" }}>—</span>}
               </button>
             ))}
-            <div style={{ display: "flex", gap: 6, marginTop: "1.25rem" }}>
-              {(["en","it"] as Lang[]).map(l => (
-                <button key={l} onClick={() => { switchLang(l); setMenuOpen(false); }}
-                  style={{ background: lang === l ? GOLD : "transparent", color: lang === l ? "#000" : "#555", border: `1px solid ${lang === l ? GOLD : "#2a2a2a"}`, padding: "0.3rem 0.85rem", fontSize: "0.58rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", transition: "all 0.35s" }}>
-                  {l}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
-      </nav>
+      </div>
 
       {/* ── FADING CONTENT WRAPPER ── */}
       <div className={contentCls} style={{ background: DARK, minHeight: "100vh", color: "#f5f0e8" }}>
@@ -633,15 +719,17 @@ export default function Home() {
 
       {/* ── Global CSS ── */}
       <style>{`
-        /* Lang transition */
-        .lang-out { animation: langOut 0.26s cubic-bezier(0.4,0,1,1) forwards; }
-        .lang-in  { animation: langIn  0.55s cubic-bezier(0,0,0.2,1) forwards; }
+        /* Language transition — staggered fade + soft blur */
+        .lang-out { animation: langOut 0.32s cubic-bezier(0.4, 0, 1, 1) forwards; }
+        .lang-in  { animation: langIn  0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes langOut {
-          to { opacity: 0; filter: blur(6px); transform: translateY(-4px); }
+          0%   { opacity: 1; filter: blur(0);    transform: translateY(0)    scale(1); }
+          100% { opacity: 0; filter: blur(8px);  transform: translateY(-6px) scale(0.994); }
         }
         @keyframes langIn {
-          from { opacity: 0; filter: blur(6px); transform: translateY(6px); }
-          to   { opacity: 1; filter: blur(0);   transform: translateY(0);   }
+          0%   { opacity: 0; filter: blur(10px); transform: translateY(10px) scale(1.006); }
+          60%  { opacity: 1;                                                                }
+          100% { opacity: 1; filter: blur(0);    transform: translateY(0)    scale(1);     }
         }
 
         /* Scroll reveal */
@@ -689,11 +777,11 @@ export default function Home() {
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media (max-width: 880px) {
           #desktop-nav { display: none !important; }
-          #mobile-btn  { display: block !important; }
+          #mobile-btn  { display: flex !important; }
         }
-        @media (min-width: 769px) {
+        @media (min-width: 881px) {
           #desktop-nav { display: flex !important; }
           #mobile-btn  { display: none !important; }
         }
