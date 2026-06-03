@@ -46,6 +46,8 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number|null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [galleryExpanded, setGalleryExpanded] = useState(false);
+  const GALLERY_PREVIEW = 12;
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState("hero");
   const [formState, setFormState] = useState({
@@ -132,14 +134,24 @@ export default function Home() {
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (!el) return;
-    // Hero scrolls to absolute top; other sections use scroll-margin-top from CSS
+    const navOffset = 96;
+    const sectionTop = el.getBoundingClientRect().top + window.scrollY;
+
+    let target: number;
     if (id === "hero") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      target = 0;
+    } else if (id === "contact") {
+      // Land so the Send Inquiry button is comfortably in view.
+      const sectionH = el.offsetHeight;
+      const viewportH = window.innerHeight;
+      // Show the bottom of the form with ~80px footer peek.
+      const fitBottom = sectionTop + sectionH - viewportH + 80;
+      const fitTop = sectionTop - navOffset;
+      target = Math.max(fitTop, fitBottom);
     } else {
-      const offset = 96; // matches the floating nav height + breathing room
-      const top = el.getBoundingClientRect().top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: "smooth" });
+      target = sectionTop - navOffset;
     }
+    window.scrollTo({ top: target, behavior: "smooth" });
     setMenuOpen(false);
   };
 
@@ -375,7 +387,7 @@ export default function Home() {
 
           <div className="hero-content" style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 1.5rem", maxWidth: 860 }}>
             <p style={{ color: GOLD, fontSize: "0.6rem", letterSpacing: "0.6em", textTransform: "uppercase", marginBottom: "2rem", animation: "heroFadeUp 1.2s 0.2s both" }}>
-              Italy · {lang === "en" ? "Est. 2020" : "Dal 2020"}
+              Italy · {lang === "en" ? "Est. 2025" : "Dal 2025"}
             </p>
             <h1 style={{ color: "#f5f0e8", fontSize: "clamp(3rem, 8vw, 7rem)", fontWeight: 300, letterSpacing: "0.04em", lineHeight: 1.05, marginBottom: "1.5rem", animation: "heroFadeUp 1.2s 0.4s both" }}>
               {t.hero.tagline}
@@ -384,17 +396,11 @@ export default function Home() {
             <p style={{ color: "#bbb", fontSize: "clamp(0.8rem, 2vw, 1rem)", letterSpacing: "0.22em", fontWeight: 300, marginBottom: "3.5rem", animation: "heroFadeUp 1.2s 0.7s both" }}>
               {t.hero.sub}
             </p>
-            <div style={{ animation: "heroFadeUp 1.2s 0.9s both", display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
-              <button onClick={() => scrollTo("contact")}
-                style={{ background: GOLD, border: `1px solid ${GOLD}`, color: "#000", padding: "0.9rem 3rem", letterSpacing: "0.2em", fontSize: "0.65rem", textTransform: "uppercase", cursor: "pointer", fontWeight: 600, transition: "all 0.4s cubic-bezier(0.16,1,0.3,1)" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = GOLD; e.currentTarget.style.letterSpacing = "0.28em"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = GOLD; e.currentTarget.style.color = "#000"; e.currentTarget.style.letterSpacing = "0.2em"; }}>
+            <div style={{ animation: "heroFadeUp 1.2s 0.9s both", display: "flex", gap: "0.85rem", justifyContent: "center", flexWrap: "wrap" }}>
+              <button onClick={() => scrollTo("contact")} className="btn-primary">
                 {t.hero.cta}
               </button>
-              <button onClick={() => scrollTo("gallery")}
-                style={{ background: "transparent", border: `1px solid rgba(255,255,255,0.2)`, color: "#ccc", padding: "0.9rem 2.5rem", letterSpacing: "0.2em", fontSize: "0.65rem", textTransform: "uppercase", cursor: "pointer", fontWeight: 300, transition: "all 0.4s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "#ccc"; }}>
+              <button onClick={() => scrollTo("gallery")} className="btn-ghost">
                 {lang === "en" ? "View Portfolio" : "Vedi Portfolio"}
               </button>
             </div>
@@ -403,8 +409,8 @@ export default function Home() {
           {/* Slide dots */}
           <div style={{ position: "absolute", bottom: 40, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 10, zIndex: 10 }}>
             {heroPhotos.map((_, i) => (
-              <button key={i} onClick={() => setHeroIdx(i)}
-                style={{ width: i === heroIdx ? 32 : 8, height: 1.5, background: i === heroIdx ? GOLD : "rgba(255,255,255,0.3)", border: "none", cursor: "pointer", transition: "all 0.5s cubic-bezier(0.16,1,0.3,1)", padding: 0 }} />
+              <button key={i} onClick={() => setHeroIdx(i)} aria-label={`Slide ${i+1}`}
+                style={{ width: i === heroIdx ? 28 : 8, height: 8, background: i === heroIdx ? GOLD : "rgba(255,255,255,0.25)", border: "none", cursor: "pointer", transition: "all 0.5s cubic-bezier(0.16,1,0.3,1)", padding: 0, borderRadius: 999 }} />
             ))}
           </div>
 
@@ -426,21 +432,15 @@ export default function Home() {
             </h2>
             <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, margin: "1.75rem auto 0" }} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1px", background: BORDER }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.25rem" }}>
             {t.services.items.map((item, i) => (
-              <div key={i} data-reveal data-d={String(i)}
-                style={{ background: DARK2, padding: "3.5rem 2.5rem", textAlign: "center", transition: "background 0.4s ease", position: "relative", overflow: "hidden" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "#111"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = DARK2; }}>
-                {/* Gold corner accent */}
-                <div style={{ position: "absolute", top: 0, left: 0, width: 32, height: 1, background: GOLD, transition: "width 0.4s ease" }} className="card-accent-top" />
-                <div style={{ position: "absolute", top: 0, left: 0, width: 1, height: 32, background: GOLD, transition: "height 0.4s ease" }} className="card-accent-left" />
-                <div style={{ color: GOLD, marginBottom: "2rem", fontSize: "1.6rem", fontWeight: 300, letterSpacing: "0.1em", transition: "transform 0.4s cubic-bezier(0.16,1,0.3,1)" }}>
+              <div key={i} data-reveal data-d={String(i)} className="service-card">
+                <div className="service-icon" style={{ color: GOLD }}>
                   {["◇", "◈", "✦", "◉"][i]}
                 </div>
-                <h3 style={{ color: "#eee", fontSize: "0.95rem", fontWeight: 400, letterSpacing: "0.12em", marginBottom: "1.2rem", textTransform: "uppercase" }}>{item.title}</h3>
-                <div style={{ width: 24, height: 1, background: GOLD, margin: "0 auto 1.25rem", transition: "width 0.4s" }} />
-                <p style={{ color: "#666", fontSize: "0.87rem", lineHeight: 1.9, fontWeight: 300 }}>{item.desc}</p>
+                <h3 style={{ color: "#eee", fontSize: "0.95rem", fontWeight: 500, letterSpacing: "0.14em", marginBottom: "1.1rem", textTransform: "uppercase" }}>{item.title}</h3>
+                <div className="service-divider" style={{ background: GOLD }} />
+                <p style={{ color: "#777", fontSize: "0.88rem", lineHeight: 1.9, fontWeight: 300 }}>{item.desc}</p>
               </div>
             ))}
           </div>
@@ -458,10 +458,7 @@ export default function Home() {
               {lang === "en" ? "Italy, Beyond Compare" : "Italia, Senza Paragoni"}
             </h2>
             <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD }} />
-            <button data-reveal data-d="3" onClick={() => scrollTo("contact")}
-              style={{ background: "transparent", border: `1px solid rgba(201,168,76,0.5)`, color: GOLD, padding: "0.7rem 2rem", letterSpacing: "0.2em", fontSize: "0.6rem", textTransform: "uppercase", cursor: "pointer", marginTop: "0.5rem", transition: "all 0.4s" }}
-              onMouseEnter={e => { e.currentTarget.style.background = GOLD; e.currentTarget.style.color = "#000"; e.currentTarget.style.borderColor = GOLD; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = GOLD; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; }}>
+            <button data-reveal data-d="3" onClick={() => scrollTo("contact")} className="btn-ghost-gold" style={{ marginTop: "0.5rem" }}>
               {lang === "en" ? "Book 2026 / 2027" : "Prenota 2026 / 2027"}
             </button>
           </div>
@@ -477,23 +474,46 @@ export default function Home() {
             <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, margin: "1.75rem auto 1.5rem" }} />
             <p data-reveal data-d="3" style={{ color: "#666", fontSize: "0.87rem", letterSpacing: "0.15em" }}>{t.gallery.sub}</p>
           </div>
-          <div style={{ columns: "280px", columnGap: "6px" }}>
-            {galleryPhotos.map((photo, i) => (
-              <div key={i} onClick={() => setLightboxIdx(i)}
-                style={{ marginBottom: "6px", overflow: "hidden", cursor: "zoom-in", breakInside: "avoid", position: "relative", background: "#111" }}>
-                <Image src={`/images/${photo}`} alt={`Portfolio ${i+1}`} width={600} height={800}
-                  style={{ width: "100%", height: "auto", display: "block", transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1), filter 0.4s ease", filter: "brightness(0.92)" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1.05)"; (e.currentTarget as HTMLImageElement).style.filter = "brightness(1)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"; (e.currentTarget as HTMLImageElement).style.filter = "brightness(0.92)"; }}
-                />
-                {/* Index overlay on hover */}
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "flex-end", padding: "1rem", background: "linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%)", opacity: 0, transition: "opacity 0.3s" }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = "0")}>
-                  <span style={{ color: "rgba(201,168,76,0.8)", fontSize: "0.55rem", letterSpacing: "0.2em" }}>VIEW</span>
+          <div style={{ position: "relative" }}>
+            <div style={{ columns: "280px", columnGap: "10px" }}>
+              {(galleryExpanded ? galleryPhotos : galleryPhotos.slice(0, GALLERY_PREVIEW)).map((photo, i) => (
+                <div key={i} onClick={() => setLightboxIdx(i)} className="gallery-tile"
+                  style={{ marginBottom: "10px", overflow: "hidden", cursor: "zoom-in", breakInside: "avoid", position: "relative", background: "#111", borderRadius: 16 }}>
+                  <Image src={`/images/${photo}`} alt={`Portfolio ${i+1}`} width={600} height={800}
+                    style={{ width: "100%", height: "auto", display: "block", transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1), filter 0.4s ease", filter: "brightness(0.92)" }} />
+                  <div className="gallery-overlay">
+                    <span style={{ color: "rgba(201,168,76,0.85)", fontSize: "0.55rem", letterSpacing: "0.22em", fontWeight: 500 }}>VIEW</span>
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {/* Fade + View More overlay (when collapsed) */}
+            {!galleryExpanded && galleryPhotos.length > GALLERY_PREVIEW && (
+              <div style={{
+                position: "absolute", left: 0, right: 0, bottom: 0,
+                height: 360,
+                background: `linear-gradient(to bottom, transparent 0%, ${DARK} 65%)`,
+                display: "flex", alignItems: "flex-end", justifyContent: "center",
+                paddingBottom: "1.5rem",
+                pointerEvents: "none",
+              }}>
+                <button onClick={() => setGalleryExpanded(true)} className="btn-primary" style={{ pointerEvents: "auto" }}>
+                  {lang === "en"
+                    ? `Show More · ${galleryPhotos.length - GALLERY_PREVIEW}+ photos`
+                    : `Mostra altre · ${galleryPhotos.length - GALLERY_PREVIEW}+ foto`}
+                </button>
               </div>
-            ))}
+            )}
+
+            {/* Collapse button (when expanded) */}
+            {galleryExpanded && (
+              <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
+                <button onClick={() => { setGalleryExpanded(false); scrollTo("gallery"); }} className="btn-ghost">
+                  {lang === "en" ? "Show Less" : "Mostra meno"}
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -501,16 +521,16 @@ export default function Home() {
         <section id="about" style={{ background: DARK2, padding: "9rem 2rem", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "6rem", alignItems: "center" }}>
             <div data-reveal style={{ position: "relative", height: 600 }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: "14%", bottom: "14%", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: "14%", bottom: "14%", overflow: "hidden", borderRadius: 20 }}>
                 <Image src="/images/photo_20_2026-05-16_14-37-06.jpg" alt="Planner" fill style={{ objectFit: "cover", transition: "transform 0.8s ease" }}
                   onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.04)")}
                   onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")} />
               </div>
-              <div style={{ position: "absolute", bottom: 0, right: 0, width: "46%", height: "50%", overflow: "hidden", outline: `3px solid ${DARK2}`, outlineOffset: -3 }}>
+              <div style={{ position: "absolute", bottom: 0, right: 0, width: "46%", height: "50%", overflow: "hidden", outline: `4px solid ${DARK2}`, outlineOffset: -4, borderRadius: 16 }}>
                 <Image src="/images/photo_30_2026-05-16_14-37-06.jpg" alt="Detail" fill style={{ objectFit: "cover" }} />
               </div>
               {/* Decorative gold frame */}
-              <div style={{ position: "absolute", bottom: "12%", right: "12%", width: "55%", height: "60%", border: `1px solid rgba(201,168,76,0.2)`, pointerEvents: "none", transform: "translate(12px, 12px)" }} />
+              <div style={{ position: "absolute", bottom: "12%", right: "12%", width: "55%", height: "60%", border: `1px solid rgba(201,168,76,0.2)`, pointerEvents: "none", transform: "translate(12px, 12px)", borderRadius: 16 }} />
             </div>
 
             <div>
@@ -548,12 +568,10 @@ export default function Home() {
           </div>
 
           {formStatus === "success" ? (
-            <div data-reveal style={{ textAlign: "center", padding: "5rem 2rem", border: `1px solid ${GOLD}`, background: "rgba(201,168,76,0.03)" }}>
-              <div style={{ width: 48, height: 48, border: `1px solid ${GOLD}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 2rem", fontSize: "1.2rem", color: GOLD }}>✓</div>
+            <div data-reveal style={{ textAlign: "center", padding: "5rem 2rem", border: `1px solid rgba(201,168,76,0.4)`, background: "rgba(201,168,76,0.03)", borderRadius: 24, backdropFilter: "blur(8px)" }}>
+              <div style={{ width: 56, height: 56, border: `1px solid ${GOLD}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 2rem", fontSize: "1.3rem", color: GOLD }}>✓</div>
               <p style={{ color: GOLD, fontSize: "1rem", letterSpacing: "0.1em", fontWeight: 300 }}>{t.contact.success}</p>
-              <button onClick={() => setFormStatus("idle")} style={{ marginTop: "2rem", background: "none", border: `1px solid #333`, color: "#666", padding: "0.6rem 1.5rem", fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase", cursor: "pointer", transition: "all 0.3s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.color = "#666"; }}>
+              <button onClick={() => setFormStatus("idle")} className="btn-ghost" style={{ marginTop: "2rem" }}>
                 {lang === "en" ? "Send Another" : "Invia Altra"}
               </button>
             </div>
@@ -600,12 +618,9 @@ export default function Home() {
                 <p style={{ color:"#c0392b", marginBottom:"1.5rem", fontSize:"0.83rem", textAlign:"center", letterSpacing:"0.05em" }}>{t.contact.error}</p>
               )}
               <div style={{ textAlign: "center" }}>
-                <button type="submit" disabled={formStatus === "loading"}
-                  style={{ background: GOLD, border:`1px solid ${GOLD}`, color:"#000", padding:"0.9rem 3.5rem", letterSpacing:"0.2em", fontSize:"0.65rem", textTransform:"uppercase", cursor:formStatus==="loading"?"not-allowed":"pointer", fontWeight:600, opacity:formStatus==="loading"?0.7:1, transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)" }}
-                  onMouseEnter={e => { if (formStatus!=="loading") { e.currentTarget.style.background="transparent"; e.currentTarget.style.color=GOLD; e.currentTarget.style.letterSpacing="0.28em"; } }}
-                  onMouseLeave={e => { e.currentTarget.style.background=GOLD; e.currentTarget.style.color="#000"; e.currentTarget.style.letterSpacing="0.2em"; }}>
+                <button type="submit" disabled={formStatus === "loading"} className="btn-primary btn-primary--lg" style={{ opacity: formStatus === "loading" ? 0.7 : 1, cursor: formStatus === "loading" ? "not-allowed" : "pointer" }}>
                   {formStatus === "loading"
-                    ? <span style={{ display:"flex", alignItems:"center", gap:8 }}><span className="spinner" />...</span>
+                    ? <span style={{ display:"inline-flex", alignItems:"center", gap:8 }}><span className="spinner" />{lang === "en" ? "Sending" : "Invio"}</span>
                     : t.contact.submit}
                 </button>
               </div>
@@ -641,10 +656,7 @@ export default function Home() {
                   {lang === "en" ? "Booking" : "Prenotazioni"}
                 </p>
                 <p style={{ color: "#555", fontSize: "0.85rem", lineHeight: 1.8 }}>2026 &amp; 2027</p>
-                <button onClick={() => scrollTo("contact")}
-                  style={{ marginTop: "1.25rem", background:"transparent", border:`1px solid #2a2a2a`, color:"#666", padding:"0.65rem 1.6rem", letterSpacing:"0.18em", fontSize:"0.58rem", textTransform:"uppercase", cursor:"pointer", transition:"all 0.4s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor=GOLD; e.currentTarget.style.color=GOLD; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor="#2a2a2a"; e.currentTarget.style.color="#666"; }}>
+                <button onClick={() => scrollTo("contact")} className="btn-ghost btn-ghost--sm" style={{ marginTop: "1.25rem" }}>
                   {t.hero.cta}
                 </button>
               </div>
@@ -681,7 +693,7 @@ export default function Home() {
 
           {/* Prev */}
           <button onClick={e => { e.stopPropagation(); setLightboxIdx(i => ((i!)-1+galleryPhotos.length) % galleryPhotos.length); }}
-            style={{ position:"absolute", left:24, top:"50%", transform:"translateY(-50%)", background:"none", border:`1px solid #222`, color:"#888", cursor:"pointer", width:48, height:48, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s" }}
+            style={{ position:"absolute", left:24, top:"50%", transform:"translateY(-50%)", background:"rgba(20,20,22,0.6)", border:`1px solid rgba(255,255,255,0.1)`, color:"#aaa", cursor:"pointer", width:48, height:48, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s", borderRadius:999, backdropFilter:"blur(12px)" }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=GOLD; e.currentTarget.style.color=GOLD; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor="#222"; e.currentTarget.style.color="#888"; }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -697,7 +709,7 @@ export default function Home() {
 
           {/* Next */}
           <button onClick={e => { e.stopPropagation(); setLightboxIdx(i => ((i!)+1) % galleryPhotos.length); }}
-            style={{ position:"absolute", right:24, top:"50%", transform:"translateY(-50%)", background:"none", border:`1px solid #222`, color:"#888", cursor:"pointer", width:48, height:48, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s" }}
+            style={{ position:"absolute", right:24, top:"50%", transform:"translateY(-50%)", background:"rgba(20,20,22,0.6)", border:`1px solid rgba(255,255,255,0.1)`, color:"#aaa", cursor:"pointer", width:48, height:48, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s", borderRadius:999, backdropFilter:"blur(12px)" }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=GOLD; e.currentTarget.style.color=GOLD; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor="#222"; e.currentTarget.style.color="#888"; }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -709,7 +721,7 @@ export default function Home() {
           <div style={{ position:"absolute", bottom:0, left:0, right:0, display:"flex", justifyContent:"center", padding:"1rem", gap:4, overflowX:"auto" }}>
             {galleryPhotos.map((p, i) => (
               <div key={i} onClick={e => { e.stopPropagation(); setLightboxIdx(i); }}
-                style={{ width:40, height:28, flexShrink:0, overflow:"hidden", cursor:"pointer", opacity:i===lightboxIdx?1:0.35, border:i===lightboxIdx?`1px solid ${GOLD}`:"1px solid transparent", transition:"all 0.3s" }}>
+                style={{ width:42, height:30, flexShrink:0, overflow:"hidden", cursor:"pointer", opacity:i===lightboxIdx?1:0.35, border:i===lightboxIdx?`1px solid ${GOLD}`:"1px solid transparent", transition:"all 0.3s", borderRadius:6 }}>
                 <Image src={`/images/${p}`} alt="" width={80} height={60} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
               </div>
             ))}
