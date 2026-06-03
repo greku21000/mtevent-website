@@ -103,47 +103,71 @@ export default function Home() {
     };
   }, []);
 
-  // ── Custom gold cursor follower (desktop only) ──
+  // ── Dove cursor follower (desktop only) ──
   useEffect(() => {
     if (window.matchMedia("(pointer: coarse)").matches) return;
-    const dot = document.createElement("div");
-    const ring = document.createElement("div");
-    dot.className = "mt-cursor-dot";
-    ring.className = "mt-cursor-ring";
-    document.body.appendChild(dot);
-    document.body.appendChild(ring);
+
+    const wrap = document.createElement("div");
+    wrap.className = "mt-dove";
+    wrap.innerHTML = `
+      <svg viewBox="0 0 64 64" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="dgrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"  stop-color="#f5f0e8"/>
+            <stop offset="60%" stop-color="#e8d5a3"/>
+            <stop offset="100%" stop-color="#c9a84c"/>
+          </linearGradient>
+        </defs>
+        <path d="M44 14c4 0 8 2 10 6-3-1-6-1-8 0 3 2 5 5 6 9-3-1-6 0-8 2 1 4-1 8-4 11-3 3-7 4-11 4-3 0-6-1-9-3-3-2-5-5-6-9-1-3-1-7 0-10 2-5 6-9 11-11l1-1c2-1 5-2 7-2 4 0 8 1 11 4z" fill="url(#dgrad)"/>
+        <path d="M28 30c-3-1-6-1-9 1-2 1-4 3-5 5 4 1 8 1 12-1 3-2 5-4 6-7l-4 2z" fill="rgba(10,10,10,0.18)"/>
+        <circle cx="46" cy="22" r="1.4" fill="#0a0a0a"/>
+        <path d="M52 22c2-1 4-1 6 0-2 1-4 2-6 1z" fill="#c9a84c"/>
+      </svg>`;
+    document.body.appendChild(wrap);
 
     let mx = window.innerWidth / 2, my = window.innerHeight / 2;
-    let rx = mx, ry = my;
+    let cx = mx, cy = my;
+    let prevX = mx, prevY = my;
     let rafId = 0;
 
     const tick = () => {
-      rx += (mx - rx) * 0.18;
-      ry += (my - ry) * 0.18;
-      dot.style.transform = `translate(${mx}px, ${my}px)`;
-      ring.style.transform = `translate(${rx}px, ${ry}px)`;
+      cx += (mx - cx) * 0.22;
+      cy += (my - cy) * 0.22;
+      const dx = cx - prevX;
+      const dy = cy - prevY;
+      // gentle rotation toward movement direction (capped for elegance)
+      const tilt = Math.max(-18, Math.min(18, dx * 1.6));
+      const bob = Math.sin(performance.now() / 600) * 1.2;
+      wrap.style.transform = `translate3d(${cx - 19}px, ${cy - 19 + bob}px, 0) rotate(${tilt}deg)`;
+      prevX = cx; prevY = cy;
       rafId = requestAnimationFrame(tick);
     };
 
     const onMove = (e: MouseEvent) => { mx = e.clientX; my = e.clientY; };
     const onOver = (e: MouseEvent) => {
       const t = e.target as HTMLElement;
-      if (t.closest("button, a, [data-cursor='zoom']")) {
-        ring.classList.add("mt-cursor-ring--hover");
+      if (t.closest("button, a, input, textarea, select")) {
+        wrap.classList.add("mt-dove--hover");
       } else {
-        ring.classList.remove("mt-cursor-ring--hover");
+        wrap.classList.remove("mt-dove--hover");
       }
     };
+    const onDown = () => wrap.classList.add("mt-dove--down");
+    const onUp   = () => wrap.classList.remove("mt-dove--down");
 
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseover", onOver);
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("mouseup", onUp);
     rafId = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseover", onOver);
-      dot.remove(); ring.remove();
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("mouseup", onUp);
+      wrap.remove();
     };
   }, []);
 
@@ -515,48 +539,28 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── MARQUEE STRIP (Eva-inspired infinite scroll) ── */}
-        <div className="marquee-wrap" aria-hidden="true">
-          <div className="marquee-track">
-            {Array.from({ length: 2 }).map((_, copy) => (
-              <div key={copy} className="marquee-group">
-                {[
-                  lang === "en" ? "Destination Weddings" : "Destination Wedding",
-                  "Italy",
-                  lang === "en" ? "Luxury Planning" : "Pianificazione di Lusso",
-                  lang === "en" ? "Lake Como" : "Lago di Como",
-                  lang === "en" ? "Beyond Your Expectations" : "Oltre le tue Aspettative",
-                  "Venice", "Tuscany", "Amalfi",
-                ].map((text, i) => (
-                  <span key={`${copy}-${i}`} className="marquee-item">
-                    <span>{text}</span>
-                    <span className="marquee-star">✦</span>
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── FULLWIDTH BANNER (parallax + curtain reveal) ── */}
+        {/* ── FULLWIDTH BANNER (parallax + soft fade edges) ── */}
         <div ref={bannerRef} className="banner-wrap" style={{ position: "relative", height: 560, overflow: "hidden" }}>
           <div ref={bannerImgRef} style={{ position: "absolute", inset: "-15% 0", willChange: "transform" }}>
             <Image src="/images/photo_10_2026-05-16_14-37-06.jpg" alt="Ceremony" fill style={{ objectFit: "cover", objectPosition: "center 30%" }} />
           </div>
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.4) 50%, rgba(10,10,10,0.85) 100%)" }} />
 
-          {/* Curtain reveal — gold sheet slides away revealing the photo */}
-          <div className="banner-curtain" data-reveal />
+          {/* Horizontal cinematic vignette */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.32) 50%, rgba(10,10,10,0.78) 100%)" }} />
+          {/* Top fade into the dark page background */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 140, background: "linear-gradient(to bottom, #0a0a0a 0%, rgba(10,10,10,0.6) 50%, transparent 100%)", pointerEvents: "none" }} />
+          {/* Bottom fade into the dark page background */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 160, background: "linear-gradient(to top, #0a0a0a 0%, rgba(10,10,10,0.6) 50%, transparent 100%)", pointerEvents: "none" }} />
 
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1.25rem", zIndex: 3 }}>
-            <p data-reveal style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.55em", textTransform: "uppercase" }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1.25rem", zIndex: 3, padding: "0 1.5rem" }}>
+            <p data-reveal style={{ color: "#e8d5a3", fontSize: "0.7rem", letterSpacing: "0.5em", textTransform: "uppercase", fontWeight: 500, textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
               {lang === "en" ? "Destination Weddings" : "Destination Wedding"}
             </p>
-            <h2 data-reveal data-d="1" style={{ color: "#f5f0e8", fontSize: "clamp(2rem, 5vw, 4rem)", fontWeight: 300, letterSpacing: "0.08em", textAlign: "center" }}>
+            <h2 data-reveal data-d="1" style={{ color: "#fff", fontSize: "clamp(2.2rem, 5.5vw, 4.2rem)", fontWeight: 400, letterSpacing: "0.06em", textAlign: "center", textShadow: "0 4px 30px rgba(0,0,0,0.7)" }}>
               {lang === "en" ? "Italy, Beyond Compare" : "Italia, Senza Paragoni"}
             </h2>
-            <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD }} />
-            <button data-reveal data-d="3" onClick={() => scrollTo("contact")} className="btn-ghost-gold" style={{ marginTop: "0.5rem" }}>
+            <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, boxShadow: "0 0 12px rgba(201,168,76,0.6)" }} />
+            <button data-reveal data-d="3" onClick={() => scrollTo("contact")} className="btn-ghost-gold" style={{ marginTop: "0.5rem", backdropFilter: "blur(16px)", background: "rgba(20,18,12,0.5)" }}>
               {lang === "en" ? "Book 2026 / 2027" : "Prenota 2026 / 2027"}
             </button>
           </div>
@@ -654,30 +658,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── MARQUEE (reverse, contact bridge) ── */}
-        <div className="marquee-wrap marquee-wrap--reverse" aria-hidden="true" style={{ borderTop: "none" }}>
-          <div className="marquee-track marquee-track--reverse">
-            {Array.from({ length: 2 }).map((_, copy) => (
-              <div key={copy} className="marquee-group">
-                {[
-                  lang === "en" ? "Let's Plan Together" : "Pianifichiamo Insieme",
-                  lang === "en" ? "Booking 2026" : "Prenotazioni 2026",
-                  lang === "en" ? "Booking 2027" : "Prenotazioni 2027",
-                  "MT Event & Wedding",
-                  lang === "en" ? "Get in Touch" : "Contattaci",
-                ].map((text, i) => (
-                  <span key={`${copy}-${i}`} className="marquee-item marquee-item--ghost">
-                    <span>{text}</span>
-                    <span className="marquee-star">◇</span>
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* ── CONTACT ── */}
-        <section id="contact" style={{ padding: "7rem 2rem 9rem", maxWidth: 920, margin: "0 auto" }}>
+        <section id="contact" style={{ padding: "9rem 2rem", maxWidth: 920, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "4.5rem" }}>
             <p data-reveal style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
               {lang === "en" ? "Get in Touch" : "Contattaci"}

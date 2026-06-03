@@ -222,99 +222,36 @@
     100% { transform: translateY(0);    opacity: 1; }
   }
 
-  /* ─────────── MARQUEE STRIP (Eva-style) ─────────── */
-  .marquee-wrap {
-    position: relative;
-    overflow: hidden;
-    border-top: 1px solid rgba(255, 255, 255, 0.04);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    padding: 2.25rem 0;
-    background: linear-gradient(180deg, rgba(10,10,10,0.9), rgba(14,14,16,0.9));
-    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-  }
-  .marquee-track {
-    display: flex;
-    width: max-content;
-    animation: marqueeScroll 40s linear infinite;
-    will-change: transform;
-  }
-  .marquee-track--reverse { animation: marqueeScrollReverse 50s linear infinite; }
-  .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
-  .marquee-group { display: flex; flex-shrink: 0; }
-  .marquee-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 2.5rem;
-    padding-right: 2.5rem;
-    font-family: var(--font-display), serif;
-    font-size: clamp(1.6rem, 3.5vw, 2.6rem);
-    font-weight: 300;
-    color: #f5f0e8;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
-  .marquee-item--ghost {
-    color: transparent;
-    -webkit-text-stroke: 1px rgba(245, 240, 232, 0.45);
-    font-style: italic;
-  }
-  .marquee-star {
-    color: var(--gold);
-    font-size: 0.75em;
-    display: inline-block;
-    animation: starSpin 8s linear infinite;
-  }
-  @keyframes marqueeScroll        { to { transform: translateX(-50%); } }
-  @keyframes marqueeScrollReverse { from { transform: translateX(-50%); } to { transform: translateX(0); } }
-  @keyframes starSpin             { to { transform: rotate(360deg); } }
-
-  /* ─────────── BANNER CURTAIN REVEAL ─────────── */
-  .banner-wrap { isolation: isolate; }
-  .banner-curtain {
-    position: absolute; inset: 0; z-index: 2;
-    background: linear-gradient(135deg, #c9a84c 0%, #b8964a 50%, #8a6f30 100%);
-    transform: scaleY(1);
-    transform-origin: top;
-    transition: transform 1.6s cubic-bezier(0.83, 0, 0.17, 1);
-    pointer-events: none;
-  }
-  .banner-curtain.revealed { transform: scaleY(0); transform-origin: bottom; }
-
-  /* ─────────── CUSTOM GOLD CURSOR ─────────── */
-  .mt-cursor-dot, .mt-cursor-ring {
+  /* ─────────── DOVE CURSOR ─────────── */
+  .mt-dove {
     position: fixed;
     top: 0; left: 0;
+    width: 38px; height: 38px;
     pointer-events: none;
     z-index: 9999;
-    border-radius: 50%;
-    mix-blend-mode: difference;
+    transform-origin: center;
+    transition: filter 0.4s var(--ease-out), opacity 0.4s ease;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.55)) drop-shadow(0 0 14px rgba(201,168,76,0.35));
+    will-change: transform;
   }
-  .mt-cursor-dot {
-    width: 6px; height: 6px;
-    background: #f5f0e8;
-    margin: -3px 0 0 -3px;
-    transition: width 0.25s ease, height 0.25s ease, opacity 0.25s;
+  .mt-dove svg {
+    width: 100%; height: 100%;
+    transition: transform 0.4s var(--ease-out);
   }
-  .mt-cursor-ring {
-    width: 36px; height: 36px;
-    border: 1px solid rgba(245, 240, 232, 0.4);
-    margin: -18px 0 0 -18px;
-    transition: width 0.35s var(--ease-out), height 0.35s var(--ease-out), margin 0.35s var(--ease-out), border-color 0.35s, background 0.35s;
+  .mt-dove--hover svg {
+    transform: scale(1.35);
   }
-  .mt-cursor-ring--hover {
-    width: 58px; height: 58px;
-    margin: -29px 0 0 -29px;
-    border-color: #c9a84c;
-    background: rgba(201, 168, 76, 0.08);
+  .mt-dove--hover {
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6)) drop-shadow(0 0 22px rgba(201,168,76,0.7));
   }
-  /* Hide system cursor only on desktop for delight */
+  .mt-dove--down svg { transform: scale(0.85); }
+
   @media (hover: hover) and (pointer: fine) {
     body { cursor: none; }
     button, a, input, textarea, select { cursor: none; }
   }
   @media (hover: none), (pointer: coarse) {
-    .mt-cursor-dot, .mt-cursor-ring { display: none; }
+    .mt-dove { display: none; }
   }
 
   /* ─────────── GALLERY TILE ─────────── */
