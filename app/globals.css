@@ -254,6 +254,15 @@
     .mt-dove { display: none; }
   }
 
+  /* ─────────── TESTIMONIAL FADE ─────────── */
+  .testimonial-fade {
+    animation: testimonialFade 0.7s var(--ease-out);
+  }
+  @keyframes testimonialFade {
+    0%   { opacity: 0; transform: translateX(20px); filter: blur(6px); }
+    100% { opacity: 1; transform: translateX(0);    filter: blur(0);   }
+  }
+
   /* ─────────── GALLERY TILE ─────────── */
   .gallery-tile {
     transition: transform 0.5s var(--ease-out);

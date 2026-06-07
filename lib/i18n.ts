@@ -38,6 +38,15 @@ export const translations = {
       title: "Portfolio",
       sub: "Each event is a unique story",
     },
+    testimonials: {
+      kicker: "Words From Our Couples",
+      title: "Voices of Joy",
+      items: [
+        { quote: "Maria turned our wedding into a fairytale. Every detail, every flower, every glance — flawless.", author: "Sofia & Lorenzo", location: "Lake Como, 2025" },
+        { quote: "The attention to detail and creative vision transformed our celebration into a piece of art.", author: "Olivia & James", location: "Tuscany, 2024" },
+        { quote: "Working with MT Event felt like a true partnership. They listened, they understood, they delivered.", author: "Anastasia & David", location: "Venice, 2024" },
+      ],
+    },
     about: {
       title: "About MT Event & Wedding",
       p1: "We are a premier event and wedding planning agency based in Italy, specializing in creating extraordinary experiences for couples and organizations from around the world.",
@@ -106,6 +115,15 @@ export const translations = {
     gallery: {
       title: "Portfolio",
       sub: "Ogni evento è una storia unica",
+    },
+    testimonials: {
+      kicker: "Le Parole dei Nostri Sposi",
+      title: "Voci di Gioia",
+      items: [
+        { quote: "Maria ha trasformato il nostro matrimonio in una favola. Ogni dettaglio, ogni fiore, ogni sguardo — impeccabile.", author: "Sofia & Lorenzo", location: "Lago di Como, 2025" },
+        { quote: "L'attenzione ai dettagli e la visione creativa hanno trasformato la nostra celebrazione in un'opera d'arte.", author: "Olivia & James", location: "Toscana, 2024" },
+        { quote: "Lavorare con MT Event è stata una vera partnership. Hanno ascoltato, capito e realizzato i nostri sogni.", author: "Anastasia & David", location: "Venezia, 2024" },
+      ],
     },
     about: {
       title: "MT Event & Wedding",

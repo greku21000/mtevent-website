@@ -37,7 +37,7 @@ const GOLD = "#c9a84c";
 const DARK = "#0a0a0a";
 const DARK2 = "#0d0d0d";
 const BORDER = "#1a1a1a";
-const SECTIONS = ["hero","services","gallery","about","contact"];
+const SECTIONS = ["hero","services","gallery","about","testimonials","contact"];
 
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en");
@@ -47,6 +47,10 @@ export default function Home() {
   const [lightboxIdx, setLightboxIdx] = useState<number|null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [galleryExpanded, setGalleryExpanded] = useState(false);
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
+  const [statsAnimated, setStatsAnimated] = useState(false);
+  const [statValues, setStatValues] = useState([0, 0, 0]);
+  const statsRef = useRef<HTMLDivElement>(null);
   const GALLERY_PREVIEW = 12;
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState("hero");
@@ -201,6 +205,36 @@ export default function Home() {
     const id = setInterval(() => setHeroIdx(i => (i+1) % heroPhotos.length), 5500);
     return () => clearInterval(id);
   }, []);
+
+  // ── Testimonials autoplay ──
+  useEffect(() => {
+    const id = setInterval(() => setTestimonialIdx(i => (i+1) % 3), 6000);
+    return () => clearInterval(id);
+  }, []);
+
+  // ── Animated counter when stats enter viewport ──
+  useEffect(() => {
+    if (!statsRef.current) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !statsAnimated) {
+        setStatsAnimated(true);
+        const targets = [150, 12, 5];
+        const duration = 1800;
+        const start = performance.now();
+        const step = () => {
+          const now = performance.now();
+          const p = Math.min((now - start) / duration, 1);
+          // ease-out cubic
+          const ease = 1 - Math.pow(1 - p, 3);
+          setStatValues(targets.map(t => Math.round(t * ease)));
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }
+    }, { threshold: 0.3 });
+    obs.observe(statsRef.current);
+    return () => obs.disconnect();
+  }, [statsAnimated]);
 
   // ── Lightbox keyboard ──
   useEffect(() => {
@@ -646,13 +680,116 @@ export default function Home() {
               <p data-reveal data-d="2" style={{ color: "#777", lineHeight: 1.95, marginBottom: "1.25rem", fontWeight: 300, fontSize: "0.93rem" }}>{t.about.p1}</p>
               <p data-reveal data-d="3" style={{ color: "#777", lineHeight: 1.95, marginBottom: "1.25rem", fontWeight: 300, fontSize: "0.93rem" }}>{t.about.p2}</p>
               <p data-reveal data-d="4" style={{ color: GOLD, lineHeight: 1.9, fontSize: "0.95rem", letterSpacing: "0.04em", fontStyle: "italic" }}>{t.about.p3}</p>
-              <div data-reveal data-d="4" style={{ display: "flex", gap: "3rem", marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid ${BORDER}` }}>
-                {[{num:"150+",label:t.about.stat1},{num:"12",label:t.about.stat2},{num:"5+",label:t.about.stat3}].map((s,i) => (
+              <div ref={statsRef} data-reveal data-d="4" style={{ display: "flex", gap: "3rem", marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid ${BORDER}` }}>
+                {[
+                  { val: statValues[0], suffix: "+", label: t.about.stat1 },
+                  { val: statValues[1], suffix: "",  label: t.about.stat2 },
+                  { val: statValues[2], suffix: "+", label: t.about.stat3 },
+                ].map((s,i) => (
                   <div key={i} style={{ textAlign: "center" }}>
-                    <div style={{ color: GOLD, fontSize: "2.2rem", fontWeight: 300, lineHeight: 1 }}>{s.num}</div>
-                    <div style={{ color: "#444", fontSize: "0.55rem", letterSpacing: "0.25em", textTransform: "uppercase", marginTop: 8 }}>{s.label}</div>
+                    <div style={{ color: GOLD, fontSize: "2.4rem", fontWeight: 300, lineHeight: 1, fontFamily: "var(--font-display), serif", fontVariantNumeric: "tabular-nums" }}>
+                      {s.val}{s.suffix}
+                    </div>
+                    <div style={{ color: "#555", fontSize: "0.55rem", letterSpacing: "0.28em", textTransform: "uppercase", marginTop: 10, fontWeight: 500 }}>{s.label}</div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── TESTIMONIALS (editorial style — inspired by 21st.dev) ── */}
+        <section id="testimonials" style={{ padding: "9rem 2rem", maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <p data-reveal style={{ color: GOLD, fontSize: "0.6rem", letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
+              {t.testimonials.kicker}
+            </p>
+            <h2 data-reveal data-d="1" style={{ color: "#f5f0e8", fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 300, letterSpacing: "0.1em" }}>
+              {t.testimonials.title}
+            </h2>
+            <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, margin: "1.75rem auto 0" }} />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 200px) 1fr", gap: "clamp(1rem, 4vw, 3rem)", alignItems: "flex-start" }}>
+            {/* Giant index number */}
+            <div style={{
+              fontFamily: "var(--font-display), serif",
+              fontSize: "clamp(7rem, 16vw, 14rem)",
+              fontWeight: 300,
+              lineHeight: 0.8,
+              color: "rgba(201, 168, 76, 0.12)",
+              fontVariantNumeric: "tabular-nums",
+              transition: "all 0.6s var(--ease-out)",
+              userSelect: "none",
+            }}>
+              {String(testimonialIdx + 1).padStart(2, "0")}
+            </div>
+
+            {/* Quote + author */}
+            <div style={{ paddingTop: "1.5rem", minHeight: 260 }}>
+              <svg width="36" height="28" viewBox="0 0 36 28" fill="none" style={{ marginBottom: "1.5rem", opacity: 0.4 }}>
+                <path d="M0 16C0 7 5 0 14 0v6c-4 0-7 4-7 8h7v14H0V16zm22 0c0-9 5-16 14-16v6c-4 0-7 4-7 8h7v14H22V16z" fill="#c9a84c"/>
+              </svg>
+
+              <div key={`q-${testimonialIdx}-${lang}`} className="testimonial-fade">
+                <blockquote style={{
+                  color: "#f5f0e8",
+                  fontFamily: "var(--font-display), serif",
+                  fontSize: "clamp(1.4rem, 3vw, 2.1rem)",
+                  fontWeight: 300,
+                  lineHeight: 1.4,
+                  letterSpacing: "0.005em",
+                  fontStyle: "italic",
+                  marginBottom: "2.5rem",
+                }}>
+                  &ldquo;{t.testimonials.items[testimonialIdx].quote}&rdquo;
+                </blockquote>
+
+                <div>
+                  <div style={{ color: GOLD, fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 500, marginBottom: 6 }}>
+                    {t.testimonials.items[testimonialIdx].author}
+                  </div>
+                  <div style={{ color: "#666", fontSize: "0.72rem", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                    {t.testimonials.items[testimonialIdx].location}
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation — animated line selectors */}
+              <div style={{ marginTop: "3rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    {t.testimonials.items.map((_, i) => (
+                      <button key={i} onClick={() => setTestimonialIdx(i)} aria-label={`Testimonial ${i+1}`}
+                        style={{ background: "none", border: "none", padding: "10px 0", cursor: "pointer" }}>
+                        <span style={{
+                          display: "block", height: 1,
+                          width: i === testimonialIdx ? 48 : 20,
+                          background: i === testimonialIdx ? GOLD : "rgba(255,255,255,0.2)",
+                          transition: "all 0.5s var(--ease-out)",
+                        }} />
+                      </button>
+                    ))}
+                  </div>
+                  <span style={{ color: "#555", fontSize: "0.6rem", letterSpacing: "0.3em" }}>
+                    {String(testimonialIdx + 1).padStart(2, "0")} / {String(t.testimonials.items.length).padStart(2, "0")}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", gap: 4 }}>
+                  <button onClick={() => setTestimonialIdx(i => (i - 1 + t.testimonials.items.length) % t.testimonials.items.length)}
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "#888", cursor: "pointer", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, transition: "all 0.3s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#888"; }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  <button onClick={() => setTestimonialIdx(i => (i + 1) % t.testimonials.items.length)}
+                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "#888", cursor: "pointer", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, transition: "all 0.3s" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#888"; }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
