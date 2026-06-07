@@ -1,29 +1,29 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter } from "next/font/google";
+import { Libre_Bodoni, Public_Sans } from "next/font/google";
 import "./globals.css";
 
-const display = Cormorant_Garamond({
+const display = Libre_Bodoni({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-display",
   display: "swap",
 });
 
-const sans = Inter({
+const sans = Public_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["300", "400", "500", "600"],
   variable: "--font-sans",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "MT Event & Wedding | Luxury Event Planning in Italy",
+  title: "MT Event & Wedding — Volume MMXXVI",
   description:
-    "Premier event and wedding planning agency in Italy. Destination weddings, corporate events, and private celebrations beyond your expectations.",
-  keywords: "wedding planner Italy, destination wedding Italy, event planner Italy, luxury wedding Italy",
+    "Editorial destination weddings & luxury events in Italy. Curated by Maria Tomash. Booking 2026 & 2027.",
+  keywords: "wedding planner Italy, destination wedding Italy, luxury event planner",
   openGraph: {
     title: "MT Event & Wedding",
-    description: "Luxury Event & Wedding Planning in Italy — Beyond Your Expectations",
+    description: "Editorial destination weddings in Italy — Beyond Your Expectations",
     type: "website",
   },
 };

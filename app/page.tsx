@@ -4,67 +4,49 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { translations, type Lang } from "@/lib/i18n";
 
-const galleryPhotos = [
-  "photo_1_2026-05-16_14-37-06.jpg","photo_2_2026-05-16_14-37-06.jpg","photo_3_2026-05-16_14-37-06.jpg",
-  "photo_4_2026-05-16_14-37-06.jpg","photo_5_2026-05-16_14-37-06.jpg","photo_6_2026-05-16_14-37-06.jpg",
-  "photo_7_2026-05-16_14-37-06.jpg","photo_8_2026-05-16_14-37-06.jpg","photo_9_2026-05-16_14-37-06.jpg",
-  "photo_10_2026-05-16_14-37-06.jpg","photo_11_2026-05-16_14-37-06.jpg","photo_12_2026-05-16_14-37-06.jpg",
-  "photo_13_2026-05-16_14-37-06.jpg","photo_14_2026-05-16_14-37-06.jpg","photo_15_2026-05-16_14-37-06.jpg",
-  "photo_16_2026-05-16_14-37-06.jpg","photo_17_2026-05-16_14-37-06.jpg","photo_18_2026-05-16_14-37-06.jpg",
-  "photo_19_2026-05-16_14-37-06.jpg","photo_20_2026-05-16_14-37-06.jpg","photo_21_2026-05-16_14-37-06.jpg",
-  "photo_22_2026-05-16_14-37-06.jpg","photo_23_2026-05-16_14-37-06.jpg","photo_24_2026-05-16_14-37-06.jpg",
-  "photo_25_2026-05-16_14-37-06.jpg","photo_26_2026-05-16_14-37-06.jpg","photo_27_2026-05-16_14-37-06.jpg",
-  "photo_28_2026-05-16_14-37-06.jpg","photo_29_2026-05-16_14-37-06.jpg","photo_30_2026-05-16_14-37-06.jpg",
-  "photo_31_2026-05-16_14-37-06.jpg","photo_32_2026-05-16_14-37-06.jpg","photo_33_2026-05-16_14-37-06.jpg",
-  "photo_34_2026-05-16_14-37-06.jpg","photo_35_2026-05-16_14-37-06.jpg","photo_36_2026-05-16_14-37-06.jpg",
-  "photo_37_2026-05-16_14-37-06.jpg","photo_38_2026-05-16_14-37-06.jpg","photo_39_2026-05-16_14-37-06.jpg",
-  "photo_40_2026-05-16_14-37-06.jpg","photo_41_2026-05-16_14-37-06.jpg","photo_42_2026-05-16_14-37-06.jpg",
-  "photo_43_2026-05-16_14-37-06.jpg","photo_44_2026-05-16_14-37-06.jpg","photo_45_2026-05-16_14-37-06.jpg",
-  "photo_46_2026-05-16_14-37-06.jpg","photo_47_2026-05-16_14-37-06.jpg","photo_48_2026-05-16_14-37-06.jpg",
-  "photo_49_2026-05-16_14-37-06.jpg","photo_50_2026-05-16_14-37-06.jpg","photo_51_2026-05-16_14-37-06.jpg",
-  "photo_52_2026-05-16_14-37-06.jpg","photo_53_2026-05-16_14-37-06.jpg","photo_54_2026-05-16_14-37-06.jpg",
-];
+const allPhotos = Array.from({ length: 54 }, (_, i) => `photo_${i + 1}_2026-05-16_14-37-06.jpg`);
+const heroPhotos = ["photo_1_2026-05-16_14-37-06.jpg","photo_10_2026-05-16_14-37-06.jpg","photo_20_2026-05-16_14-37-06.jpg","photo_30_2026-05-16_14-37-06.jpg","photo_40_2026-05-16_14-37-06.jpg"];
 
-const heroPhotos = [
-  "photo_1_2026-05-16_14-37-06.jpg",
-  "photo_10_2026-05-16_14-37-06.jpg",
-  "photo_20_2026-05-16_14-37-06.jpg",
-  "photo_30_2026-05-16_14-37-06.jpg",
-  "photo_40_2026-05-16_14-37-06.jpg",
-];
-
-const GOLD = "#c9a84c";
-const DARK = "#0a0a0a";
-const DARK2 = "#0d0d0d";
-const BORDER = "#1a1a1a";
-const SECTIONS = ["hero","services","gallery","about","testimonials","contact"];
+const SECTIONS = ["hero", "services", "portfolio", "about", "testimonials", "contact"];
 
 export default function Home() {
   const [lang, setLang] = useState<Lang>("en");
-  const [langPhase, setLangPhase] = useState<"idle"|"out"|"in">("idle");
+  const [langPhase, setLangPhase] = useState<"idle" | "out" | "in">("idle");
   const [heroIdx, setHeroIdx] = useState(0);
+  const [introDone, setIntroDone] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [lightboxIdx, setLightboxIdx] = useState<number|null>(null);
-  const [scrolled, setScrolled] = useState(false);
-  const [galleryExpanded, setGalleryExpanded] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
-  const [statsAnimated, setStatsAnimated] = useState(false);
-  const [statValues, setStatValues] = useState([0, 0, 0]);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const GALLERY_PREVIEW = 12;
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [activeSection, setActiveSection] = useState("hero");
-  const [formState, setFormState] = useState({
-    name:"", email:"", phone:"", event_type:"", event_date:"", guest_count:"", venue:"", message:"",
-  });
-  const [formStatus, setFormStatus] = useState<"idle"|"loading"|"success"|"error">("idle");
+  const [formState, setFormState] = useState({ name: "", email: "", phone: "", event_type: "", event_date: "", guest_count: "", venue: "", message: "" });
+  const [formStatus, setFormStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [statValues, setStatValues] = useState([0, 0, 0]);
+  const [time, setTime] = useState("");
 
   const langTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const bannerRef = useRef<HTMLDivElement>(null);
-  const bannerImgRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const heroImgRef = useRef<HTMLDivElement>(null);
   const t = translations[lang];
 
-  // ── Language fade transition ──
+  // ── Page-load intro ──
+  useEffect(() => {
+    const id = setTimeout(() => setIntroDone(true), 1600);
+    return () => clearTimeout(id);
+  }, []);
+
+  // ── Italian time ticker (editorial detail) ──
+  useEffect(() => {
+    const update = () => {
+      const d = new Date();
+      const fmt = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Rome", hour12: false });
+      setTime(`Rome · ${fmt.format(d)}`);
+    };
+    update();
+    const id = setInterval(update, 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  // ── Language transition ──
   const switchLang = useCallback((newLang: Lang) => {
     if (newLang === lang || langPhase !== "idle") return;
     clearTimeout(langTimer.current);
@@ -73,208 +55,144 @@ export default function Home() {
       setLang(newLang);
       setLangPhase("in");
       langTimer.current = setTimeout(() => setLangPhase("idle"), 750);
-    }, 320);
+    }, 340);
   }, [lang, langPhase]);
 
-  // ── Scroll: navbar opacity + progress bar + banner parallax ──
+  // ── Hero slideshow + Ken Burns ──
+  useEffect(() => {
+    const id = setInterval(() => setHeroIdx(i => (i + 1) % heroPhotos.length), 5500);
+    return () => clearInterval(id);
+  }, []);
+
+  // ── Hero parallax ──
   useEffect(() => {
     let raf = 0;
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        const sy = window.scrollY;
-        setScrolled(sy > 60);
-        const total = document.body.scrollHeight - window.innerHeight;
-        setScrollProgress(total > 0 ? sy / total : 0);
-
-        // Parallax: banner image moves 25% of the section's scroll velocity
-        if (bannerRef.current && bannerImgRef.current) {
-          const rect = bannerRef.current.getBoundingClientRect();
-          const vh = window.innerHeight;
-          if (rect.bottom > 0 && rect.top < vh) {
-            const progress = (vh - rect.top) / (vh + rect.height);
-            const translate = (progress - 0.5) * 120; // -60 .. +60 px
-            bannerImgRef.current.style.transform = `translate3d(0, ${translate}px, 0) scale(1.15)`;
-          }
+        if (heroImgRef.current) {
+          const y = window.scrollY * 0.4;
+          heroImgRef.current.style.transform = `translate3d(0, ${y}px, 0)`;
         }
       });
     };
-    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, []);
-
-  // ── Dove cursor follower (desktop only) ──
-  useEffect(() => {
-    if (window.matchMedia("(pointer: coarse)").matches) return;
-
-    const wrap = document.createElement("div");
-    wrap.className = "mt-dove";
-    wrap.innerHTML = `
-      <svg viewBox="0 0 64 64" width="38" height="38" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="dgrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%"  stop-color="#f5f0e8"/>
-            <stop offset="60%" stop-color="#e8d5a3"/>
-            <stop offset="100%" stop-color="#c9a84c"/>
-          </linearGradient>
-        </defs>
-        <path d="M44 14c4 0 8 2 10 6-3-1-6-1-8 0 3 2 5 5 6 9-3-1-6 0-8 2 1 4-1 8-4 11-3 3-7 4-11 4-3 0-6-1-9-3-3-2-5-5-6-9-1-3-1-7 0-10 2-5 6-9 11-11l1-1c2-1 5-2 7-2 4 0 8 1 11 4z" fill="url(#dgrad)"/>
-        <path d="M28 30c-3-1-6-1-9 1-2 1-4 3-5 5 4 1 8 1 12-1 3-2 5-4 6-7l-4 2z" fill="rgba(10,10,10,0.18)"/>
-        <circle cx="46" cy="22" r="1.4" fill="#0a0a0a"/>
-        <path d="M52 22c2-1 4-1 6 0-2 1-4 2-6 1z" fill="#c9a84c"/>
-      </svg>`;
-    document.body.appendChild(wrap);
-
-    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
-    let cx = mx, cy = my;
-    let prevX = mx, prevY = my;
-    let rafId = 0;
-
-    const tick = () => {
-      cx += (mx - cx) * 0.22;
-      cy += (my - cy) * 0.22;
-      const dx = cx - prevX;
-      const dy = cy - prevY;
-      // gentle rotation toward movement direction (capped for elegance)
-      const tilt = Math.max(-18, Math.min(18, dx * 1.6));
-      const bob = Math.sin(performance.now() / 600) * 1.2;
-      wrap.style.transform = `translate3d(${cx - 19}px, ${cy - 19 + bob}px, 0) rotate(${tilt}deg)`;
-      prevX = cx; prevY = cy;
-      rafId = requestAnimationFrame(tick);
-    };
-
-    const onMove = (e: MouseEvent) => { mx = e.clientX; my = e.clientY; };
-    const onOver = (e: MouseEvent) => {
-      const t = e.target as HTMLElement;
-      if (t.closest("button, a, input, textarea, select")) {
-        wrap.classList.add("mt-dove--hover");
-      } else {
-        wrap.classList.remove("mt-dove--hover");
-      }
-    };
-    const onDown = () => wrap.classList.add("mt-dove--down");
-    const onUp   = () => wrap.classList.remove("mt-dove--down");
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseover", onOver);
-    window.addEventListener("mousedown", onDown);
-    window.addEventListener("mouseup", onUp);
-    rafId = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseover", onOver);
-      window.removeEventListener("mousedown", onDown);
-      window.removeEventListener("mouseup", onUp);
-      wrap.remove();
-    };
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("scroll", onScroll); };
   }, []);
 
   // ── Active section tracker ──
   useEffect(() => {
-    const observers = SECTIONS.map(id => {
+    const obs = SECTIONS.map(id => {
       const el = document.getElementById(id);
       if (!el) return null;
-      const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
-        { threshold: 0.35 }
-      );
-      obs.observe(el);
-      return obs;
+      const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) setActiveSection(id); }, { threshold: 0.35 });
+      o.observe(el);
+      return o;
     });
-    return () => observers.forEach(o => o?.disconnect());
+    return () => obs.forEach(o => o?.disconnect());
   }, []);
 
-  // ── Scroll reveal (IntersectionObserver) ──
+  // ── Scroll reveal ──
   useEffect(() => {
     const obs = new IntersectionObserver(
-      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("revealed"); }),
-      { threshold: 0.1, rootMargin: "0px 0px -48px 0px" }
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("is-in"); }),
+      { threshold: 0.1, rootMargin: "0px 0px -64px 0px" }
     );
     document.querySelectorAll("[data-reveal]").forEach(el => obs.observe(el));
     return () => obs.disconnect();
-  }, []);
+  }, [lang]);
 
-  // ── Hero slideshow ──
-  useEffect(() => {
-    const id = setInterval(() => setHeroIdx(i => (i+1) % heroPhotos.length), 5500);
-    return () => clearInterval(id);
-  }, []);
-
-  // ── Testimonials autoplay ──
-  useEffect(() => {
-    const id = setInterval(() => setTestimonialIdx(i => (i+1) % 3), 6000);
-    return () => clearInterval(id);
-  }, []);
-
-  // ── Animated counter when stats enter viewport ──
+  // ── Stats counter ──
   useEffect(() => {
     if (!statsRef.current) return;
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !statsAnimated) {
-        setStatsAnimated(true);
+    let animated = false;
+    const o = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !animated) {
+        animated = true;
         const targets = [150, 12, 5];
-        const duration = 1800;
+        const dur = 1800;
         const start = performance.now();
         const step = () => {
-          const now = performance.now();
-          const p = Math.min((now - start) / duration, 1);
-          // ease-out cubic
-          const ease = 1 - Math.pow(1 - p, 3);
-          setStatValues(targets.map(t => Math.round(t * ease)));
+          const p = Math.min((performance.now() - start) / dur, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          setStatValues(targets.map(t => Math.round(t * eased)));
           if (p < 1) requestAnimationFrame(step);
         };
         requestAnimationFrame(step);
       }
     }, { threshold: 0.3 });
-    obs.observe(statsRef.current);
-    return () => obs.disconnect();
-  }, [statsAnimated]);
+    o.observe(statsRef.current);
+    return () => o.disconnect();
+  }, []);
+
+  // ── Mouse orb + custom cursor ──
+  useEffect(() => {
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+    const orb = document.createElement("div");
+    const cur = document.createElement("div");
+    orb.className = "mouse-orb";
+    cur.className = "ed-cursor";
+    document.body.appendChild(orb);
+    document.body.appendChild(cur);
+
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let ox = mx, oy = my;
+    let raf = 0;
+    const tick = () => {
+      ox += (mx - ox) * 0.08;
+      oy += (my - oy) * 0.08;
+      orb.style.transform = `translate(${ox}px, ${oy}px) translate(-50%, -50%)`;
+      cur.style.transform = `translate(${mx}px, ${my}px)`;
+      raf = requestAnimationFrame(tick);
+    };
+    const onMove = (e: MouseEvent) => { mx = e.clientX; my = e.clientY; };
+    const onOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("button, a, input, textarea, select, .pf-card, .h-card")) {
+        cur.classList.add("ed-cursor--hover");
+      } else {
+        cur.classList.remove("ed-cursor--hover");
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseover", onOver);
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseover", onOver); orb.remove(); cur.remove(); };
+  }, []);
+
+  // ── Testimonials autoplay ──
+  useEffect(() => {
+    const id = setInterval(() => setTestimonialIdx(i => (i + 1) % 3), 7000);
+    return () => clearInterval(id);
+  }, []);
 
   // ── Lightbox keyboard ──
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    const h = (e: KeyboardEvent) => {
       if (lightboxIdx === null) return;
       if (e.key === "Escape") setLightboxIdx(null);
-      if (e.key === "ArrowRight") setLightboxIdx(i => ((i!)+1) % galleryPhotos.length);
-      if (e.key === "ArrowLeft") setLightboxIdx(i => ((i!)-1+galleryPhotos.length) % galleryPhotos.length);
+      if (e.key === "ArrowRight") setLightboxIdx(i => ((i!) + 1) % allPhotos.length);
+      if (e.key === "ArrowLeft") setLightboxIdx(i => ((i!) - 1 + allPhotos.length) % allPhotos.length);
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
   }, [lightboxIdx]);
-
-  // ── Lock scroll when lightbox open ──
-  useEffect(() => {
-    document.body.style.overflow = lightboxIdx !== null ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [lightboxIdx]);
+  useEffect(() => { document.body.style.overflow = lightboxIdx !== null ? "hidden" : ""; }, [lightboxIdx]);
 
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (!el) return;
-    const navOffset = 96;
-    const sectionTop = el.getBoundingClientRect().top + window.scrollY;
-
-    let target: number;
-    if (id === "hero") {
-      target = 0;
-    } else if (id === "contact") {
-      // Land so the Send Inquiry button is comfortably in view.
-      const sectionH = el.offsetHeight;
-      const viewportH = window.innerHeight;
-      // Show the bottom of the form with ~80px footer peek.
-      const fitBottom = sectionTop + sectionH - viewportH + 80;
-      const fitTop = sectionTop - navOffset;
-      target = Math.max(fitTop, fitBottom);
+    const offset = 96;
+    if (id === "hero") { window.scrollTo({ top: 0, behavior: "smooth" }); }
+    else if (id === "contact") {
+      const sTop = el.getBoundingClientRect().top + window.scrollY;
+      const sH = el.offsetHeight, vH = window.innerHeight;
+      const target = Math.max(sTop - offset, sTop + sH - vH + 80);
+      window.scrollTo({ top: target, behavior: "smooth" });
     } else {
-      target = sectionTop - navOffset;
+      const top = el.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: "smooth" });
     }
-    window.scrollTo({ top: target, behavior: "smooth" });
     setMenuOpen(false);
   };
 
@@ -288,621 +206,520 @@ export default function Home() {
         body: JSON.stringify({ ...formState, guest_count: formState.guest_count ? parseInt(formState.guest_count) : undefined }),
       });
       setFormStatus(res.ok ? "success" : "error");
-      if (res.ok) setFormState({ name:"", email:"", phone:"", event_type:"", event_date:"", guest_count:"", venue:"", message:"" });
+      if (res.ok) setFormState({ name: "", email: "", phone: "", event_type: "", event_date: "", guest_count: "", venue: "", message: "" });
     } catch { setFormStatus("error"); }
   };
 
   const navItems = [
-    { key:"services", label:t.nav.services },
-    { key:"gallery",  label:t.nav.gallery  },
-    { key:"about",    label:t.nav.about    },
-    { key:"contact",  label:t.nav.contact  },
+    { key: "services", label: t.nav.services, num: "01" },
+    { key: "portfolio", label: t.nav.gallery, num: "02" },
+    { key: "about", label: t.nav.about, num: "03" },
+    { key: "contact", label: t.nav.contact, num: "04" },
   ];
 
   const contentCls = langPhase === "out" ? "lang-out" : langPhase === "in" ? "lang-in" : "";
 
-  // ── NAV BUTTON (glass pill style) ──
-  const NavBtn = ({ id, label }: { id: string; label: string }) => {
-    const active = activeSection === id;
-    return (
-      <button onClick={() => scrollTo(id)} style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: active ? "#f5f0e8" : "rgba(255,255,255,0.55)",
-        fontSize: "0.6rem", letterSpacing: "0.24em", textTransform: "uppercase",
-        fontWeight: 500,
-        transition: "color 0.35s ease",
-        position: "relative", padding: "6px 2px",
-      }}
-        onMouseEnter={e => { if (!active) e.currentTarget.style.color = "#f5f0e8"; }}
-        onMouseLeave={e => { if (!active) e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}
-      >
-        {label}
-        {/* gold dot indicator */}
-        <span style={{
-          position: "absolute",
-          bottom: -2, left: "50%",
-          width: 3, height: 3, borderRadius: "50%",
-          background: GOLD,
-          transform: `translateX(-50%) scale(${active ? 1 : 0})`,
-          transition: "transform 0.45s cubic-bezier(0.16,1,0.3,1)",
-          boxShadow: `0 0 8px ${GOLD}`,
-        }} />
-      </button>
-    );
-  };
-
   return (
     <>
-      {/* ── FLOATING GLASS PILL NAVBAR ── */}
-      <div style={{
-        position: "fixed",
-        top: scrolled ? 16 : 24,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 50,
-        width: "calc(100% - 24px)",
-        maxWidth: 920,
-        transition: "top 0.6s cubic-bezier(0.16,1,0.3,1)",
-        pointerEvents: "none",
-      }}>
-        <nav
-          aria-label="Primary"
-          style={{
-            pointerEvents: "auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "0.5rem",
-            padding: "10px 14px 10px 22px",
-            borderRadius: 999,
-            background: scrolled
-              ? "rgba(14, 14, 16, 0.72)"
-              : "rgba(20, 20, 22, 0.42)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(24px) saturate(180%)",
-            WebkitBackdropFilter: "blur(24px) saturate(180%)",
-            boxShadow: scrolled
-              ? "0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)"
-              : "0 14px 44px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
-            transition: "background 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease",
-            position: "relative",
-            overflow: "hidden",
-          }}>
-          {/* subtle gold scroll progress baked into the pill */}
-          <div style={{
-            position: "absolute", bottom: 0, left: 16, right: 16, height: 1,
-            background: `linear-gradient(90deg, transparent, ${GOLD} 50%, transparent)`,
-            transform: `scaleX(${scrollProgress})`,
-            transformOrigin: "left",
-            transition: "transform 0.15s linear",
-            opacity: 0.7,
-            pointerEvents: "none",
-          }} />
+      {/* ── PAGE-LOAD INTRO CURTAIN ── */}
+      <div className={`intro-curtain ${introDone ? "intro-done" : ""}`} aria-hidden="true">
+        <div className="intro-half intro-half--left" />
+        <div className="intro-half intro-half--right" />
+      </div>
+      <div className={`intro-logo ${introDone ? "intro-done" : ""}`} aria-hidden="true">
+        <div style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(2.5rem, 7vw, 5rem)", fontWeight: 400, letterSpacing: "0.06em", lineHeight: 1 }}>M·T</div>
+        <div style={{ fontSize: "0.55rem", letterSpacing: "0.5em", marginTop: 8, color: "rgba(245,241,234,0.6)" }}>EVENT &amp; WEDDING</div>
+      </div>
 
-          {/* Logo */}
-          <button onClick={() => scrollTo("hero")} style={{
-            background: "none", border: "none", cursor: "pointer",
-            display: "flex", flexDirection: "column", gap: 1, paddingRight: 12,
-          }}>
-            <span style={{ color: GOLD, fontFamily: "var(--font-display), serif", fontSize: "1.05rem", letterSpacing: "0.25em", fontWeight: 400, lineHeight: 1 }}>MT</span>
-            <span style={{ color: "rgba(255,255,255,0.42)", fontSize: "0.42rem", letterSpacing: "0.42em", textTransform: "uppercase", fontWeight: 500 }}>Event &amp; Wedding</span>
+      {/* ── EDITORIAL HEADER ── */}
+      <header style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        background: "rgba(245, 241, 234, 0.86)",
+        backdropFilter: "blur(20px) saturate(140%)",
+        WebkitBackdropFilter: "blur(20px) saturate(140%)",
+        borderBottom: "1px solid var(--ink)",
+      }}>
+        {/* Top mini-strip */}
+        <div style={{ borderBottom: "1px solid var(--ink)", padding: "6px 0", fontSize: "0.55rem", letterSpacing: "0.32em", textTransform: "uppercase" }}>
+          <div className="container-ed" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <span>No. 001 — {lang === "en" ? "Volume MMXXVI" : "Volume MMXXVI"}</span>
+            <span style={{ textAlign: "center", flex: 1, minWidth: 0 }}>{lang === "en" ? "Editorial Wedding Planning · Italy" : "Wedding Planning Editoriale · Italia"}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>{time}</span>
+          </div>
+        </div>
+
+        {/* Main nav */}
+        <nav className="container-ed" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 70 }}>
+          <button onClick={() => scrollTo("hero")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "baseline", gap: 12 }}>
+            <span style={{ fontFamily: "var(--font-display), serif", fontSize: "1.6rem", fontWeight: 500, letterSpacing: "0.02em", lineHeight: 1 }}>M·T</span>
+            <span style={{ fontSize: "0.55rem", letterSpacing: "0.32em", textTransform: "uppercase", color: "var(--ink-muted)" }}>Event &amp; Wedding</span>
           </button>
 
-          {/* Desktop nav links */}
-          <div id="desktop-nav" style={{ display: "flex", alignItems: "center", gap: "1.6rem", paddingLeft: 4 }}>
-            {navItems.map(({ key, label }) => <NavBtn key={key} id={key} label={label} />)}
-          </div>
-
-          {/* Right cluster: lang + mobile */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {/* Lang segmented control */}
-            <div style={{
-              display: "flex",
-              position: "relative",
-              padding: 3,
-              background: "rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: 999,
-            }}>
-              {/* Sliding gold pill indicator */}
-              <span style={{
-                position: "absolute",
-                top: 3,
-                bottom: 3,
-                width: "calc(50% - 3px)",
-                left: lang === "en" ? 3 : "calc(50%)",
-                background: `linear-gradient(180deg, ${GOLD}, #b8964a)`,
-                borderRadius: 999,
-                transition: "left 0.5s cubic-bezier(0.7, 0, 0.2, 1)",
-                boxShadow: "0 2px 10px rgba(201,168,76,0.35)",
-                pointerEvents: "none",
-              }} />
+          {/* Desktop nav */}
+          <div id="desk-nav" style={{ display: "flex", alignItems: "center", gap: "2.5rem" }}>
+            {navItems.map(({ key, label, num }) => (
+              <button key={key} onClick={() => scrollTo(key)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  fontSize: "0.62rem", letterSpacing: "0.28em", textTransform: "uppercase", fontWeight: 500,
+                  color: activeSection === key ? "var(--ink)" : "var(--ink-muted)",
+                  transition: "color 0.3s",
+                  display: "flex", alignItems: "baseline", gap: 6,
+                }}>
+                <span style={{ color: activeSection === key ? "var(--gold)" : "var(--ink-muted)", fontSize: "0.55rem", fontFamily: "var(--font-display), serif", fontStyle: "italic" }}>{num}</span>
+                {label}
+              </button>
+            ))}
+            <div style={{ display: "flex", borderLeft: "1px solid var(--ink)", paddingLeft: "1.5rem", gap: 12 }}>
               {(["en", "it"] as Lang[]).map(l => (
                 <button key={l} onClick={() => switchLang(l)}
                   style={{
-                    position: "relative", zIndex: 1,
-                    background: "transparent", border: "none",
-                    color: lang === l ? "#0a0a0a" : "rgba(255,255,255,0.55)",
-                    padding: "4px 12px",
-                    fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase",
-                    cursor: "pointer", fontWeight: 600,
-                    transition: "color 0.4s ease",
-                    minWidth: 32,
-                  }}>
-                  {l}
-                </button>
+                    background: "none", border: "none", cursor: "pointer",
+                    fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase",
+                    color: lang === l ? "var(--ink)" : "var(--ink-muted)",
+                    fontWeight: lang === l ? 700 : 400,
+                    borderBottom: lang === l ? "1px solid var(--gold)" : "1px solid transparent",
+                    paddingBottom: 2,
+                    transition: "all 0.3s",
+                  }}>{l}</button>
               ))}
             </div>
-
-            {/* Mobile btn */}
-            <button id="mobile-btn" onClick={() => setMenuOpen(o => !o)} aria-label="Menu"
-              style={{
-                display: "none",
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 999,
-                cursor: "pointer", color: "#e8d5a3",
-                width: 36, height: 36,
-                alignItems: "center", justifyContent: "center",
-                transition: "background 0.3s",
-              }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                {menuOpen
-                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />}
-              </svg>
-            </button>
           </div>
+
+          {/* Mobile */}
+          <button id="mob-btn" onClick={() => setMenuOpen(o => !o)} aria-label="Menu"
+            style={{ display: "none", background: "none", border: "1px solid var(--ink)", padding: "8px 12px", cursor: "pointer", fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+            {menuOpen ? "Close" : "Menu"}
+          </button>
         </nav>
 
-        {/* Mobile menu — also glass */}
-        <div style={{
-          pointerEvents: menuOpen ? "auto" : "none",
-          overflow: "hidden",
-          marginTop: 10,
-          maxHeight: menuOpen ? 480 : 0,
-          opacity: menuOpen ? 1 : 0,
-          transform: menuOpen ? "translateY(0)" : "translateY(-8px)",
-          transition: "max-height 0.5s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1)",
-          background: "rgba(14, 14, 16, 0.78)",
-          backdropFilter: "blur(24px) saturate(180%)",
-          WebkitBackdropFilter: "blur(24px) saturate(180%)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 18,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-        }}>
-          <div style={{ padding: "1rem 1.5rem 1.25rem" }}>
-            {navItems.map(({ key, label }) => (
+        {/* Mobile menu */}
+        <div style={{ overflow: "hidden", maxHeight: menuOpen ? 500 : 0, transition: "max-height 0.5s var(--ease)", background: "var(--paper)", borderTop: menuOpen ? "1px solid var(--ink)" : "none" }}>
+          <div style={{ padding: "1.5rem 1.5rem 2rem" }}>
+            {navItems.map(({ key, label, num }) => (
               <button key={key} onClick={() => scrollTo(key)}
-                style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  width: "100%", padding: "0.85rem 0",
-                  background: "none", border: "none", borderBottom: "1px solid rgba(255,255,255,0.06)",
-                  color: activeSection === key ? GOLD : "rgba(255,255,255,0.7)",
-                  fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase",
-                  cursor: "pointer", transition: "color 0.3s",
-                }}>
+                style={{ display: "flex", width: "100%", justifyContent: "space-between", padding: "1rem 0", background: "none", border: "none", borderBottom: "1px solid var(--ink)", color: activeSection === key ? "var(--ink)" : "var(--ink-muted)", fontSize: "1.1rem", fontFamily: "var(--font-display), serif", cursor: "pointer", letterSpacing: "0.02em" }}>
                 <span>{label}</span>
-                {activeSection === key && <span style={{ color: GOLD, fontSize: "0.6rem" }}>—</span>}
+                <span style={{ fontSize: "0.6rem", color: "var(--ink-muted)", fontStyle: "italic" }}>{num}</span>
               </button>
             ))}
+            <div style={{ display: "flex", gap: 16, marginTop: "1.5rem", fontSize: "0.7rem", letterSpacing: "0.2em" }}>
+              {(["en", "it"] as Lang[]).map(l => (
+                <button key={l} onClick={() => { switchLang(l); setMenuOpen(false); }}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: lang === l ? "var(--ink)" : "var(--ink-muted)", textTransform: "uppercase", fontWeight: lang === l ? 700 : 400, borderBottom: lang === l ? "1px solid var(--gold)" : "1px solid transparent" }}>{l}</button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* ── FADING CONTENT WRAPPER ── */}
-      <div className={contentCls} style={{ background: DARK, minHeight: "100vh", color: "#f5f0e8" }}>
+      {/* ── CONTENT WRAPPER ── */}
+      <div className={contentCls} style={{ position: "relative", zIndex: 2 }}>
 
-        {/* ── HERO ── */}
-        <section id="hero" style={{ position: "relative", height: "100vh", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {heroPhotos.map((photo, i) => (
-            <div key={photo} style={{
-              position: "absolute", inset: 0,
-              opacity: i === heroIdx ? 1 : 0,
-              transition: "opacity 2s cubic-bezier(0.4,0,0.2,1)",
-              transform: i === heroIdx ? "scale(1)" : "scale(1.03)",
-            }}>
-              <Image src={`/images/${photo}`} alt="" fill style={{ objectFit: "cover", objectPosition: "center" }} priority={i === 0} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(10,10,10,0.5) 0%, rgba(10,10,10,0.3) 40%, rgba(10,10,10,0.7) 100%)" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(10,10,10,0.95) 100%)" }} />
+        {/* ── HERO — editorial split layout ── */}
+        <section id="hero" style={{ position: "relative", minHeight: "100vh", paddingTop: 110 }}>
+          <div className="container-ed" style={{ paddingBottom: "4rem" }}>
+            {/* Top kicker row */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.25rem 0", borderBottom: "1px solid var(--ink)", marginBottom: "clamp(2rem, 6vw, 5rem)" }}>
+              <div className="kicker">{lang === "en" ? "Italy · Est. MMXXV" : "Italia · Dal MMXXV"}</div>
+              <div className="kicker" style={{ flexDirection: "row-reverse" }}>{lang === "en" ? "Booking 2026 — 2027" : "Prenotazioni 2026 — 2027"}</div>
             </div>
-          ))}
 
-          <div className="hero-content" style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 1.5rem", maxWidth: 860 }}>
-            <p style={{ color: GOLD, fontSize: "0.6rem", letterSpacing: "0.6em", textTransform: "uppercase", marginBottom: "2rem", animation: "heroFadeUp 1.2s 0.2s both" }}>
-              Italy · {lang === "en" ? "Est. 2025" : "Dal 2025"}
-            </p>
-            <h1 key={`h-${lang}`} className="hero-headline" style={{ color: "#f5f0e8", fontSize: "clamp(3rem, 8vw, 7rem)", fontWeight: 300, letterSpacing: "0.04em", lineHeight: 1.05, marginBottom: "1.5rem" }}>
-              {t.hero.tagline.split(" ").map((word, i) => (
-                <span key={i} className="word-wrap">
-                  <span className="word-inner" style={{ animationDelay: `${0.4 + i * 0.14}s` }}>{word}&nbsp;</span>
-                </span>
-              ))}
-            </h1>
-            <div style={{ width: 50, height: 1, background: GOLD, margin: "0 auto 2rem", animation: "heroFadeUp 1.2s 0.6s both" }} />
-            <p style={{ color: "#bbb", fontSize: "clamp(0.8rem, 2vw, 1rem)", letterSpacing: "0.22em", fontWeight: 300, marginBottom: "3.5rem", animation: "heroFadeUp 1.2s 0.7s both" }}>
-              {t.hero.sub}
-            </p>
-            <div style={{ animation: "heroFadeUp 1.2s 0.9s both", display: "flex", gap: "0.85rem", justifyContent: "center", flexWrap: "wrap" }}>
-              <button onClick={() => scrollTo("contact")} className="btn-primary">
-                {t.hero.cta}
-              </button>
-              <button onClick={() => scrollTo("gallery")} className="btn-ghost">
-                {lang === "en" ? "View Portfolio" : "Vedi Portfolio"}
-              </button>
+            {/* HUGE editorial headline */}
+            <div style={{ position: "relative" }}>
+              <h1 key={`h-${lang}`} className="display" style={{
+                fontFamily: "var(--font-display), serif",
+                fontSize: "clamp(3.5rem, 13vw, 14rem)",
+                lineHeight: 0.88,
+                letterSpacing: "-0.02em",
+                fontWeight: 500,
+                display: "block",
+              }}>
+                {/* Line 1 */}
+                <div style={{ display: "block", marginBottom: "0.15em" }}>
+                  {(lang === "en" ? "Beyond" : "Oltre").split(" ").map((w, i) => (
+                    <span key={i} className="word-w"><span className="word-i" style={{ animationDelay: `${1.6 + i * 0.12}s` }}>{w}&nbsp;</span></span>
+                  ))}
+                </div>
+                {/* Line 2 — italic */}
+                <div style={{ display: "block", marginBottom: "0.15em", fontStyle: "italic", color: "var(--ink-soft)" }}>
+                  {(lang === "en" ? "Your" : "le tue").split(" ").map((w, i) => (
+                    <span key={i} className="word-w"><span className="word-i" style={{ animationDelay: `${1.85 + i * 0.12}s` }}>{w}&nbsp;</span></span>
+                  ))}
+                </div>
+                {/* Line 3 — with image inline */}
+                <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "0.4em" }}>
+                  {(lang === "en" ? "Expectations" : "aspettative").split("").map((char, i) => (
+                    <span key={i} className="word-w" style={{ display: "inline-block" }}>
+                      <span className="word-i" style={{ animationDelay: `${2.1 + i * 0.04}s`, display: "inline-block" }}>{char}</span>
+                    </span>
+                  ))}
+                </div>
+              </h1>
+
+              {/* Floating image collage */}
+              <div ref={heroImgRef} style={{ position: "absolute", top: "10%", right: "-2%", width: "clamp(180px, 22vw, 360px)", aspectRatio: "3/4", overflow: "hidden", pointerEvents: "none", willChange: "transform", animation: "wordIn 1.6s var(--ease) 1.4s both", animationFillMode: "both" }}>
+                {heroPhotos.map((p, i) => (
+                  <div key={p} style={{ position: "absolute", inset: 0, opacity: i === heroIdx ? 1 : 0, transition: "opacity 1.8s var(--ease)" }}>
+                    <Image src={`/images/${p}`} alt="" fill style={{ objectFit: "cover", filter: "grayscale(0.15) contrast(1.05)" }} priority={i === 0} />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Slide dots */}
-          <div style={{ position: "absolute", bottom: 40, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 10, zIndex: 10 }}>
-            {heroPhotos.map((_, i) => (
-              <button key={i} onClick={() => setHeroIdx(i)} aria-label={`Slide ${i+1}`}
-                style={{ width: i === heroIdx ? 28 : 8, height: 8, background: i === heroIdx ? GOLD : "rgba(255,255,255,0.25)", border: "none", cursor: "pointer", transition: "all 0.5s cubic-bezier(0.16,1,0.3,1)", padding: 0, borderRadius: 999 }} />
-            ))}
-          </div>
-
-          {/* Scroll arrow */}
-          <div style={{ position: "absolute", bottom: 38, right: 44, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, zIndex: 10, animation: "arrowPulse 2.5s ease-in-out infinite" }}>
-            <span style={{ color: "#666", fontSize: "0.45rem", letterSpacing: "0.3em", textTransform: "uppercase", writingMode: "vertical-rl" }}>scroll</span>
-            <div style={{ width: 1, height: 40, background: "linear-gradient(to bottom, transparent, rgba(201,168,76,0.6))" }} />
+            {/* Bottom row — sub + CTA */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "3rem", marginTop: "clamp(3rem, 8vw, 6rem)", alignItems: "end" }}>
+              <div data-reveal data-d="3" style={{ maxWidth: 480 }}>
+                <p style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(1.05rem, 1.6vw, 1.35rem)", lineHeight: 1.55, fontStyle: "italic", color: "var(--ink-soft)" }}>
+                  {lang === "en"
+                    ? "An editorial atelier composing destination weddings, private celebrations and brand rituals across Italy's most poetic addresses."
+                    : "Un atelier editoriale che compone matrimoni di destinazione, celebrazioni private e rituali di marca attraverso gli indirizzi più poetici d'Italia."}
+                </p>
+              </div>
+              <div data-reveal data-d="4" style={{ display: "flex", flexDirection: "column", gap: "1rem", alignItems: "flex-start" }}>
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                  <button onClick={() => scrollTo("contact")} className="btn-ink"><span>{t.hero.cta}</span></button>
+                  <button onClick={() => scrollTo("portfolio")} className="btn-outline"><span>{lang === "en" ? "Portfolio" : "Portfolio"}</span></button>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: "0.5rem", fontSize: "0.55rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--ink-muted)" }}>
+                  <span style={{ width: 24, height: 1, background: "var(--ink-muted)", display: "inline-block" }} />
+                  {lang === "en" ? "Scroll to begin" : "Scorri per iniziare"}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* ── SERVICES ── */}
-        <section id="services" style={{ padding: "9rem 2rem", maxWidth: 1300, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "5rem" }}>
-            <p data-reveal data-d="0" style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
-              {lang === "en" ? "What We Do" : "Cosa Facciamo"}
-            </p>
-            <h2 data-reveal data-d="1" style={{ color: "#f5f0e8", fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 300, letterSpacing: "0.1em" }}>
-              {t.services.title}
-            </h2>
-            <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, margin: "1.75rem auto 0" }} />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.25rem" }}>
-            {t.services.items.map((item, i) => (
-              <div key={i} data-reveal data-d={String(i)} className="service-card">
-                <div className="service-icon" style={{ color: GOLD }}>
-                  {["◇", "◈", "✦", "◉"][i]}
-                </div>
-                <h3 style={{ color: "#eee", fontSize: "0.95rem", fontWeight: 500, letterSpacing: "0.14em", marginBottom: "1.1rem", textTransform: "uppercase" }}>{item.title}</h3>
-                <div className="service-divider" style={{ background: GOLD }} />
-                <p style={{ color: "#777", fontSize: "0.88rem", lineHeight: 1.9, fontWeight: 300 }}>{item.desc}</p>
+        {/* ── MARQUEE ── */}
+        <div className="marq-strip" aria-hidden="true">
+          <div className="marq-track">
+            {Array.from({ length: 2 }).map((_, copy) => (
+              <div key={copy} style={{ display: "flex" }}>
+                {[
+                  lang === "en" ? "Destination Weddings" : "Destination Wedding",
+                  "Lago di Como",
+                  lang === "en" ? "Beyond Your Expectations" : "Oltre le tue Aspettative",
+                  "Venezia",
+                  lang === "en" ? "Editorial Atelier" : "Atelier Editoriale",
+                  "Toscana",
+                  "Amalfi",
+                  "MMXXVI",
+                ].map((text, i) => (
+                  <span key={`${copy}-${i}`} className="marq-item">
+                    <span>{text}</span>
+                    <span className="marq-dot" />
+                  </span>
+                ))}
               </div>
             ))}
           </div>
+        </div>
+
+        {/* ── CHAPTER 01 — SERVICES ── */}
+        <section id="services" style={{ padding: "clamp(5rem, 10vw, 8rem) 0", position: "relative" }}>
+          <div className="container-ed">
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "clamp(1rem, 4vw, 3rem)", alignItems: "start", marginBottom: "5rem" }}>
+              <div className="chapter-num">01</div>
+              <div data-reveal style={{ paddingTop: "clamp(1rem, 3vw, 3rem)" }}>
+                <div className="kicker" style={{ marginBottom: "1.5rem" }}>{lang === "en" ? "Chapter One" : "Capitolo Primo"}</div>
+                <h2 style={{ fontSize: "clamp(2rem, 5vw, 4rem)", lineHeight: 1, fontWeight: 400, letterSpacing: "-0.01em" }}>
+                  {t.services.title}
+                </h2>
+                <p style={{ marginTop: "1.5rem", fontFamily: "var(--font-display), serif", fontStyle: "italic", fontSize: "clamp(1rem, 1.4vw, 1.2rem)", color: "var(--ink-soft)", maxWidth: 540, lineHeight: 1.5 }}>
+                  {lang === "en"
+                    ? "Four chapters of service, each crafted as a singular composition."
+                    : "Quattro capitoli di servizio, ciascuno realizzato come una composizione singolare."}
+                </p>
+              </div>
+            </div>
+
+            <div className="full-rule" />
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
+              {t.services.items.map((item, i) => (
+                <div key={i} data-reveal data-d={String(i % 4)} className="svc-card" style={{ borderRight: i < t.services.items.length - 1 ? "1px solid var(--ink)" : "none", borderBottom: "1px solid var(--ink)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1.5rem" }}>
+                    <span style={{ fontSize: "0.6rem", letterSpacing: "0.3em", color: "var(--gold)", fontWeight: 600 }}>0{i + 1}</span>
+                    <span style={{ fontSize: "0.55rem", letterSpacing: "0.3em", color: "var(--ink-muted)", textTransform: "uppercase" }}>{lang === "en" ? "Service" : "Servizio"}</span>
+                  </div>
+                  <h3 style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(1.4rem, 2.4vw, 2rem)", lineHeight: 1.15, marginBottom: "1.25rem", fontWeight: 500 }}>{item.title}</h3>
+                  <p style={{ color: "var(--ink-soft)", fontSize: "0.92rem", lineHeight: 1.7, marginBottom: "1.5rem", maxWidth: 360 }}>{item.desc}</p>
+                  <div style={{ fontSize: "0.6rem", letterSpacing: "0.3em", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: 10, color: "var(--ink)" }}>
+                    {lang === "en" ? "Inquire" : "Richiedi"}
+                    <svg width="20" height="8" viewBox="0 0 20 8" fill="none"><path d="M1 4h17m0 0L14 1m4 3l-4 3" stroke="currentColor" strokeWidth="1"/></svg>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
-        {/* ── FULLWIDTH BANNER (parallax + soft fade edges) ── */}
-        <div ref={bannerRef} className="banner-wrap" style={{ position: "relative", height: 560, overflow: "hidden" }}>
-          <div ref={bannerImgRef} style={{ position: "absolute", inset: "-15% 0", willChange: "transform" }}>
-            <Image src="/images/photo_10_2026-05-16_14-37-06.jpg" alt="Ceremony" fill style={{ objectFit: "cover", objectPosition: "center 30%" }} />
+        {/* ── CHAPTER 02 — PORTFOLIO (horizontal scroll editorial) ── */}
+        <section id="portfolio" style={{ padding: "clamp(5rem, 10vw, 8rem) 0 clamp(4rem, 8vw, 6rem)", background: "var(--ink)", color: "var(--paper)", position: "relative" }}>
+          <div className="container-ed" style={{ marginBottom: "4rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "clamp(1rem, 4vw, 3rem)", alignItems: "start" }}>
+              <div className="chapter-num" style={{ WebkitTextStroke: "1px var(--paper)", color: "transparent" }}>02</div>
+              <div data-reveal style={{ paddingTop: "clamp(1rem, 3vw, 3rem)", color: "var(--paper)" }}>
+                <div className="kicker" style={{ color: "rgba(245,241,234,0.55)", marginBottom: "1.5rem" }}>{lang === "en" ? "Chapter Two" : "Capitolo Secondo"}</div>
+                <h2 style={{ fontSize: "clamp(2rem, 5vw, 4rem)", lineHeight: 1, fontWeight: 400, color: "var(--paper)" }}>{t.gallery.title}</h2>
+                <p style={{ marginTop: "1.5rem", fontFamily: "var(--font-display), serif", fontStyle: "italic", fontSize: "clamp(1rem, 1.4vw, 1.2rem)", color: "rgba(245,241,234,0.7)", maxWidth: 540 }}>{t.gallery.sub}</p>
+              </div>
+            </div>
           </div>
 
-          {/* Horizontal cinematic vignette */}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.32) 50%, rgba(10,10,10,0.78) 100%)" }} />
-          {/* Top fade into the dark page background */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 140, background: "linear-gradient(to bottom, #0a0a0a 0%, rgba(10,10,10,0.6) 50%, transparent 100%)", pointerEvents: "none" }} />
-          {/* Bottom fade into the dark page background */}
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 160, background: "linear-gradient(to top, #0a0a0a 0%, rgba(10,10,10,0.6) 50%, transparent 100%)", pointerEvents: "none" }} />
+          <div className="h-scroll-wrap">
+            <div className="h-scroll-track">
+              {allPhotos.slice(0, 18).map((p, i) => (
+                <div key={i} className="h-card pf-card" onClick={() => setLightboxIdx(i)}>
+                  <Image src={`/images/${p}`} alt={`Portfolio ${i + 1}`} width={500} height={700} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <div className="pf-curtain">
+                    <div className="pf-curtain-content">
+                      <div style={{ fontSize: "0.55rem", letterSpacing: "0.4em", marginBottom: 8, color: "var(--gold-soft)" }}>N° {String(i + 1).padStart(3, "0")}</div>
+                      <div style={{ fontFamily: "var(--font-display), serif", fontSize: "1.4rem", fontStyle: "italic" }}>{lang === "en" ? "View" : "Vedi"}</div>
+                    </div>
+                  </div>
+                  <div style={{ position: "absolute", bottom: 16, left: 16, color: "var(--paper)", fontSize: "0.55rem", letterSpacing: "0.3em", textTransform: "uppercase" }}>
+                    {String(i + 1).padStart(2, "0")} / {String(allPhotos.length).padStart(2, "0")}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "1.25rem", zIndex: 3, padding: "0 1.5rem" }}>
-            <p data-reveal style={{ color: "#e8d5a3", fontSize: "0.7rem", letterSpacing: "0.5em", textTransform: "uppercase", fontWeight: 500, textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
-              {lang === "en" ? "Destination Weddings" : "Destination Wedding"}
+          <div className="container-ed" style={{ marginTop: "3.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+            <p style={{ fontSize: "0.6rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(245,241,234,0.55)" }}>
+              {lang === "en" ? `Showing 18 of ${allPhotos.length} · drag to explore` : `Visualizzando 18 di ${allPhotos.length} · trascina per esplorare`}
             </p>
-            <h2 data-reveal data-d="1" style={{ color: "#fff", fontSize: "clamp(2.2rem, 5.5vw, 4.2rem)", fontWeight: 400, letterSpacing: "0.06em", textAlign: "center", textShadow: "0 4px 30px rgba(0,0,0,0.7)" }}>
-              {lang === "en" ? "Italy, Beyond Compare" : "Italia, Senza Paragoni"}
-            </h2>
-            <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, boxShadow: "0 0 12px rgba(201,168,76,0.6)" }} />
-            <button data-reveal data-d="3" onClick={() => scrollTo("contact")} className="btn-ghost-gold" style={{ marginTop: "0.5rem", backdropFilter: "blur(16px)", background: "rgba(20,18,12,0.5)" }}>
-              {lang === "en" ? "Book 2026 / 2027" : "Prenota 2026 / 2027"}
+            <button onClick={() => setLightboxIdx(0)} className="btn-outline" style={{ borderColor: "var(--paper)", color: "var(--paper)" }}>
+              <span>{lang === "en" ? "Open full gallery" : "Apri galleria completa"}</span>
             </button>
           </div>
-        </div>
-
-        {/* ── GALLERY ── */}
-        <section id="gallery" style={{ padding: "9rem 2rem", maxWidth: 1440, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4.5rem" }}>
-            <p data-reveal style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
-              {lang === "en" ? "Our Work" : "I Nostri Lavori"}
-            </p>
-            <h2 data-reveal data-d="1" style={{ color: "#f5f0e8", fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 300, letterSpacing: "0.1em" }}>{t.gallery.title}</h2>
-            <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, margin: "1.75rem auto 1.5rem" }} />
-            <p data-reveal data-d="3" style={{ color: "#666", fontSize: "0.87rem", letterSpacing: "0.15em" }}>{t.gallery.sub}</p>
-          </div>
-          <div style={{ position: "relative" }}>
-            <div style={{ columns: "280px", columnGap: "10px" }}>
-              {(galleryExpanded ? galleryPhotos : galleryPhotos.slice(0, GALLERY_PREVIEW)).map((photo, i) => (
-                <div key={i} onClick={() => setLightboxIdx(i)} className="gallery-tile"
-                  style={{ marginBottom: "10px", overflow: "hidden", cursor: "zoom-in", breakInside: "avoid", position: "relative", background: "#111", borderRadius: 16 }}>
-                  <Image src={`/images/${photo}`} alt={`Portfolio ${i+1}`} width={600} height={800}
-                    style={{ width: "100%", height: "auto", display: "block", transition: "transform 0.7s cubic-bezier(0.16,1,0.3,1), filter 0.4s ease", filter: "brightness(0.92)" }} />
-                  <div className="gallery-overlay">
-                    <span style={{ color: "rgba(201,168,76,0.85)", fontSize: "0.55rem", letterSpacing: "0.22em", fontWeight: 500 }}>VIEW</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Fade + View More overlay (when collapsed) */}
-            {!galleryExpanded && galleryPhotos.length > GALLERY_PREVIEW && (
-              <div style={{
-                position: "absolute", left: 0, right: 0, bottom: 0,
-                height: 360,
-                background: `linear-gradient(to bottom, transparent 0%, ${DARK} 65%)`,
-                display: "flex", alignItems: "flex-end", justifyContent: "center",
-                paddingBottom: "1.5rem",
-                pointerEvents: "none",
-              }}>
-                <button onClick={() => setGalleryExpanded(true)} className="btn-primary" style={{ pointerEvents: "auto" }}>
-                  {lang === "en"
-                    ? `Show More · ${galleryPhotos.length - GALLERY_PREVIEW}+ photos`
-                    : `Mostra altre · ${galleryPhotos.length - GALLERY_PREVIEW}+ foto`}
-                </button>
-              </div>
-            )}
-
-            {/* Collapse button (when expanded) */}
-            {galleryExpanded && (
-              <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
-                <button onClick={() => { setGalleryExpanded(false); scrollTo("gallery"); }} className="btn-ghost">
-                  {lang === "en" ? "Show Less" : "Mostra meno"}
-                </button>
-              </div>
-            )}
-          </div>
         </section>
 
-        {/* ── ABOUT ── */}
-        <section id="about" style={{ background: DARK2, padding: "9rem 2rem", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "6rem", alignItems: "center" }}>
-            <div data-reveal style={{ position: "relative", height: 600 }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: "14%", bottom: "14%", overflow: "hidden", borderRadius: 20 }}>
-                <Image src="/images/photo_20_2026-05-16_14-37-06.jpg" alt="Planner" fill style={{ objectFit: "cover", transition: "transform 0.8s ease" }}
-                  onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.04)")}
-                  onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")} />
-              </div>
-              <div style={{ position: "absolute", bottom: 0, right: 0, width: "46%", height: "50%", overflow: "hidden", outline: `4px solid ${DARK2}`, outlineOffset: -4, borderRadius: 16 }}>
-                <Image src="/images/photo_30_2026-05-16_14-37-06.jpg" alt="Detail" fill style={{ objectFit: "cover" }} />
-              </div>
-              {/* Decorative gold frame */}
-              <div style={{ position: "absolute", bottom: "12%", right: "12%", width: "55%", height: "60%", border: `1px solid rgba(201,168,76,0.2)`, pointerEvents: "none", transform: "translate(12px, 12px)", borderRadius: 16 }} />
-            </div>
-
-            <div>
-              <p data-reveal style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
-                {lang === "en" ? "Our Story" : "La Nostra Storia"}
-              </p>
-              <h2 data-reveal data-d="1" style={{ color: "#f5f0e8", fontSize: "clamp(1.8rem, 4vw, 3rem)", fontWeight: 300, letterSpacing: "0.06em", marginBottom: "1.5rem", lineHeight: 1.2 }}>
-                {t.about.title}
-              </h2>
-              <div data-reveal data-d="2" style={{ width: 36, height: 1, background: GOLD, marginBottom: "2rem" }} />
-              <p data-reveal data-d="2" style={{ color: "#777", lineHeight: 1.95, marginBottom: "1.25rem", fontWeight: 300, fontSize: "0.93rem" }}>{t.about.p1}</p>
-              <p data-reveal data-d="3" style={{ color: "#777", lineHeight: 1.95, marginBottom: "1.25rem", fontWeight: 300, fontSize: "0.93rem" }}>{t.about.p2}</p>
-              <p data-reveal data-d="4" style={{ color: GOLD, lineHeight: 1.9, fontSize: "0.95rem", letterSpacing: "0.04em", fontStyle: "italic" }}>{t.about.p3}</p>
-              <div ref={statsRef} data-reveal data-d="4" style={{ display: "flex", gap: "3rem", marginTop: "3rem", paddingTop: "2rem", borderTop: `1px solid ${BORDER}` }}>
-                {[
-                  { val: statValues[0], suffix: "+", label: t.about.stat1 },
-                  { val: statValues[1], suffix: "",  label: t.about.stat2 },
-                  { val: statValues[2], suffix: "+", label: t.about.stat3 },
-                ].map((s,i) => (
-                  <div key={i} style={{ textAlign: "center" }}>
-                    <div style={{ color: GOLD, fontSize: "2.4rem", fontWeight: 300, lineHeight: 1, fontFamily: "var(--font-display), serif", fontVariantNumeric: "tabular-nums" }}>
-                      {s.val}{s.suffix}
-                    </div>
-                    <div style={{ color: "#555", fontSize: "0.55rem", letterSpacing: "0.28em", textTransform: "uppercase", marginTop: 10, fontWeight: 500 }}>{s.label}</div>
-                  </div>
-                ))}
+        {/* ── CHAPTER 03 — ABOUT (magazine spread) ── */}
+        <section id="about" style={{ padding: "clamp(6rem, 12vw, 10rem) 0", position: "relative" }}>
+          <div className="container-ed">
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "clamp(1rem, 4vw, 3rem)", alignItems: "start", marginBottom: "5rem" }}>
+              <div className="chapter-num">03</div>
+              <div data-reveal style={{ paddingTop: "clamp(1rem, 3vw, 3rem)" }}>
+                <div className="kicker" style={{ marginBottom: "1.5rem" }}>{lang === "en" ? "Chapter Three" : "Capitolo Terzo"}</div>
+                <h2 style={{ fontSize: "clamp(2rem, 5vw, 4rem)", lineHeight: 1, fontWeight: 400 }}>{lang === "en" ? "The Atelier" : "L'Atelier"}</h2>
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* ── TESTIMONIALS (editorial style — inspired by 21st.dev) ── */}
-        <section id="testimonials" style={{ padding: "9rem 2rem", maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
-            <p data-reveal style={{ color: GOLD, fontSize: "0.6rem", letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
-              {t.testimonials.kicker}
-            </p>
-            <h2 data-reveal data-d="1" style={{ color: "#f5f0e8", fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 300, letterSpacing: "0.1em" }}>
-              {t.testimonials.title}
-            </h2>
-            <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, margin: "1.75rem auto 0" }} />
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 200px) 1fr", gap: "clamp(1rem, 4vw, 3rem)", alignItems: "flex-start" }}>
-            {/* Giant index number */}
-            <div style={{
-              fontFamily: "var(--font-display), serif",
-              fontSize: "clamp(7rem, 16vw, 14rem)",
-              fontWeight: 300,
-              lineHeight: 0.8,
-              color: "rgba(201, 168, 76, 0.12)",
-              fontVariantNumeric: "tabular-nums",
-              transition: "all 0.6s var(--ease-out)",
-              userSelect: "none",
-            }}>
-              {String(testimonialIdx + 1).padStart(2, "0")}
-            </div>
-
-            {/* Quote + author */}
-            <div style={{ paddingTop: "1.5rem", minHeight: 260 }}>
-              <svg width="36" height="28" viewBox="0 0 36 28" fill="none" style={{ marginBottom: "1.5rem", opacity: 0.4 }}>
-                <path d="M0 16C0 7 5 0 14 0v6c-4 0-7 4-7 8h7v14H0V16zm22 0c0-9 5-16 14-16v6c-4 0-7 4-7 8h7v14H22V16z" fill="#c9a84c"/>
-              </svg>
-
-              <div key={`q-${testimonialIdx}-${lang}`} className="testimonial-fade">
-                <blockquote style={{
-                  color: "#f5f0e8",
-                  fontFamily: "var(--font-display), serif",
-                  fontSize: "clamp(1.4rem, 3vw, 2.1rem)",
-                  fontWeight: 300,
-                  lineHeight: 1.4,
-                  letterSpacing: "0.005em",
-                  fontStyle: "italic",
-                  marginBottom: "2.5rem",
-                }}>
-                  &ldquo;{t.testimonials.items[testimonialIdx].quote}&rdquo;
-                </blockquote>
-
-                <div>
-                  <div style={{ color: GOLD, fontSize: "0.85rem", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 500, marginBottom: 6 }}>
-                    {t.testimonials.items[testimonialIdx].author}
-                  </div>
-                  <div style={{ color: "#666", fontSize: "0.72rem", letterSpacing: "0.2em", textTransform: "uppercase" }}>
-                    {t.testimonials.items[testimonialIdx].location}
-                  </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: "clamp(1rem, 3vw, 2.5rem)", alignItems: "start" }}>
+              {/* Left: portrait + caption */}
+              <div data-reveal style={{ gridColumn: "span 5", position: "relative" }} className="hide-mobile-col">
+                <div style={{ aspectRatio: "3/4", position: "relative", overflow: "hidden", marginBottom: "1rem" }}>
+                  <Image src="/images/photo_20_2026-05-16_14-37-06.jpg" alt="Maria" fill style={{ objectFit: "cover", filter: "grayscale(0.2)" }} />
                 </div>
+                <p style={{ fontSize: "0.6rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--ink-muted)", display: "flex", justifyContent: "space-between" }}>
+                  <span>Maria Tomash</span>
+                  <span style={{ fontStyle: "italic", fontFamily: "var(--font-display), serif", textTransform: "none", letterSpacing: 0 }}>{lang === "en" ? "Creative Director" : "Direttrice Creativa"}</span>
+                </p>
               </div>
 
-              {/* Navigation — animated line selectors */}
-              <div style={{ marginTop: "3rem", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                    {t.testimonials.items.map((_, i) => (
-                      <button key={i} onClick={() => setTestimonialIdx(i)} aria-label={`Testimonial ${i+1}`}
-                        style={{ background: "none", border: "none", padding: "10px 0", cursor: "pointer" }}>
-                        <span style={{
-                          display: "block", height: 1,
-                          width: i === testimonialIdx ? 48 : 20,
-                          background: i === testimonialIdx ? GOLD : "rgba(255,255,255,0.2)",
-                          transition: "all 0.5s var(--ease-out)",
-                        }} />
-                      </button>
-                    ))}
-                  </div>
-                  <span style={{ color: "#555", fontSize: "0.6rem", letterSpacing: "0.3em" }}>
-                    {String(testimonialIdx + 1).padStart(2, "0")} / {String(t.testimonials.items.length).padStart(2, "0")}
+              {/* Right: body + drop cap */}
+              <div data-reveal data-d="1" style={{ gridColumn: "span 7" }} className="about-body">
+                <p style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(1.1rem, 1.6vw, 1.45rem)", lineHeight: 1.55, color: "var(--ink-soft)", marginBottom: "1.5rem" }}>
+                  <span style={{ float: "left", fontFamily: "var(--font-display), serif", fontSize: "5rem", lineHeight: 0.85, marginRight: "0.6rem", marginTop: "0.25rem", fontWeight: 600 }}>
+                    {lang === "en" ? "W" : "S"}
                   </span>
-                </div>
+                  {t.about.p1}
+                </p>
+                <p style={{ fontSize: "1rem", lineHeight: 1.85, color: "var(--ink-soft)", marginBottom: "1.5rem" }}>{t.about.p2}</p>
+                <p style={{ fontFamily: "var(--font-display), serif", fontSize: "1.2rem", lineHeight: 1.5, color: "var(--gold)", fontStyle: "italic", paddingTop: "1.25rem", borderTop: "1px solid var(--ink)" }}>
+                  &mdash; {t.about.p3}
+                </p>
 
-                <div style={{ display: "flex", gap: 4 }}>
-                  <button onClick={() => setTestimonialIdx(i => (i - 1 + t.testimonials.items.length) % t.testimonials.items.length)}
-                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "#888", cursor: "pointer", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, transition: "all 0.3s" }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#888"; }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                  </button>
-                  <button onClick={() => setTestimonialIdx(i => (i + 1) % t.testimonials.items.length)}
-                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "#888", cursor: "pointer", width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 999, transition: "all 0.3s" }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "#888"; }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                  </button>
+                {/* Animated stats */}
+                <div ref={statsRef} style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.5rem", marginTop: "3rem", paddingTop: "2rem", borderTop: "1px solid var(--ink)" }}>
+                  {[
+                    { val: statValues[0], suffix: "+", label: t.about.stat1 },
+                    { val: statValues[1], suffix: "",  label: t.about.stat2 },
+                    { val: statValues[2], suffix: "+", label: t.about.stat3 },
+                  ].map((s, i) => (
+                    <div key={i} style={{ borderRight: i < 2 ? "1px solid rgba(15,14,12,0.15)" : "none", paddingRight: i < 2 ? "1rem" : 0 }}>
+                      <div style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(2.6rem, 5vw, 3.6rem)", fontWeight: 500, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                        {s.val}{s.suffix}
+                      </div>
+                      <div style={{ marginTop: 8, fontSize: "0.55rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--ink-muted)" }}>{s.label}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── CONTACT ── */}
-        <section id="contact" style={{ padding: "9rem 2rem", maxWidth: 920, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "4.5rem" }}>
-            <p data-reveal style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.5em", textTransform: "uppercase", marginBottom: "1.2rem" }}>
-              {lang === "en" ? "Get in Touch" : "Contattaci"}
-            </p>
-            <h2 data-reveal data-d="1" style={{ color: "#f5f0e8", fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 300, letterSpacing: "0.1em" }}>{t.contact.title}</h2>
-            <div data-reveal data-d="2" style={{ width: 50, height: 1, background: GOLD, margin: "1.75rem auto 1.5rem" }} />
-            <p data-reveal data-d="3" style={{ color: "#666", fontSize: "0.88rem", letterSpacing: "0.08em" }}>{t.contact.sub}</p>
-          </div>
+        {/* ── CHAPTER 04 — TESTIMONIALS ── */}
+        <section id="testimonials" style={{ padding: "clamp(5rem, 10vw, 8rem) 0", background: "var(--paper-dark)", position: "relative" }}>
+          <div className="container-ed">
+            <div style={{ textAlign: "center", marginBottom: "5rem" }}>
+              <div className="kicker" data-reveal style={{ justifyContent: "center", marginBottom: "1.5rem" }}>{t.testimonials.kicker}</div>
+              <h2 data-reveal data-d="1" style={{ fontSize: "clamp(2.2rem, 5.5vw, 4.5rem)", lineHeight: 1, fontStyle: "italic", fontWeight: 400 }}>
+                &ldquo;{t.testimonials.title}&rdquo;
+              </h2>
+            </div>
 
-          {formStatus === "success" ? (
-            <div data-reveal style={{ textAlign: "center", padding: "5rem 2rem", border: `1px solid rgba(201,168,76,0.4)`, background: "rgba(201,168,76,0.03)", borderRadius: 24, backdropFilter: "blur(8px)" }}>
-              <div style={{ width: 56, height: 56, border: `1px solid ${GOLD}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 2rem", fontSize: "1.3rem", color: GOLD }}>✓</div>
-              <p style={{ color: GOLD, fontSize: "1rem", letterSpacing: "0.1em", fontWeight: 300 }}>{t.contact.success}</p>
-              <button onClick={() => setFormStatus("idle")} className="btn-ghost" style={{ marginTop: "2rem" }}>
-                {lang === "en" ? "Send Another" : "Invia Altra"}
+            <div key={`tst-${testimonialIdx}-${lang}`} className="testimonial-fade" style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+              <blockquote style={{
+                fontFamily: "var(--font-display), serif",
+                fontSize: "clamp(1.4rem, 3.2vw, 2.6rem)",
+                lineHeight: 1.35,
+                fontWeight: 400,
+                fontStyle: "italic",
+                color: "var(--ink)",
+                marginBottom: "2.5rem",
+              }}>
+                &ldquo;{t.testimonials.items[testimonialIdx].quote}&rdquo;
+              </blockquote>
+              <div style={{ width: 60, height: 1, background: "var(--gold)", margin: "0 auto 1.5rem" }} />
+              <div style={{ fontSize: "0.65rem", letterSpacing: "0.32em", textTransform: "uppercase", color: "var(--ink)", marginBottom: 6, fontWeight: 600 }}>
+                {t.testimonials.items[testimonialIdx].author}
+              </div>
+              <div style={{ fontFamily: "var(--font-display), serif", fontStyle: "italic", color: "var(--ink-muted)", fontSize: "0.95rem" }}>
+                {t.testimonials.items[testimonialIdx].location}
+              </div>
+            </div>
+
+            {/* Indicators */}
+            <div style={{ display: "flex", justifyContent: "center", gap: 14, marginTop: "3.5rem", alignItems: "center" }}>
+              <button onClick={() => setTestimonialIdx(i => (i - 1 + 3) % 3)} style={{ background: "none", border: "1px solid var(--ink)", padding: "10px 14px", cursor: "pointer", color: "var(--ink)" }} aria-label="Prev">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M13 5H1m0 0l4 4M1 5l4-4" stroke="currentColor" strokeWidth="1"/></svg>
+              </button>
+              {t.testimonials.items.map((_, i) => (
+                <button key={i} onClick={() => setTestimonialIdx(i)} aria-label={`Show ${i+1}`}
+                  style={{ background: "none", border: "none", padding: 4, cursor: "pointer" }}>
+                  <span style={{ display: "block", width: i === testimonialIdx ? 36 : 12, height: 1, background: i === testimonialIdx ? "var(--ink)" : "rgba(15,14,12,0.25)", transition: "all 0.5s var(--ease)" }} />
+                </button>
+              ))}
+              <button onClick={() => setTestimonialIdx(i => (i + 1) % 3)} style={{ background: "none", border: "1px solid var(--ink)", padding: "10px 14px", cursor: "pointer", color: "var(--ink)" }} aria-label="Next">
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 5h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="1"/></svg>
               </button>
             </div>
-          ) : (
-            <form data-reveal onSubmit={handleSubmit}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
-                {[
-                  { label: t.contact.name+" *", key:"name", type:"text", required:true, placeholder:t.contact.name },
-                  { label: t.contact.email+" *", key:"email", type:"email", required:true, placeholder:"email@example.com" },
-                  { label: t.contact.phone, key:"phone", type:"tel", required:false, placeholder:"+39 000 000 0000" },
-                ].map(({ label, key, type, required, placeholder }) => (
-                  <div key={key}>
-                    <label style={{ display:"block", color:"#555", fontSize:"0.58rem", letterSpacing:"0.25em", textTransform:"uppercase", marginBottom:"0.6rem" }}>{label}</label>
-                    <input className="input-dark" type={type} required={required} placeholder={placeholder}
-                      value={(formState as Record<string,string>)[key]}
-                      onChange={e => setFormState(s => ({ ...s, [key]: e.target.value }))} />
-                  </div>
-                ))}
-                <div>
-                  <label style={{ display:"block", color:"#555", fontSize:"0.58rem", letterSpacing:"0.25em", textTransform:"uppercase", marginBottom:"0.6rem" }}>{t.contact.eventType} *</label>
-                  <select className="input-dark" required value={formState.event_type} onChange={e => setFormState(s => ({ ...s, event_type: e.target.value }))}>
-                    <option value="">—</option>
-                    {t.contact.eventTypes.map(et => <option key={et} value={et}>{et}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display:"block", color:"#555", fontSize:"0.58rem", letterSpacing:"0.25em", textTransform:"uppercase", marginBottom:"0.6rem" }}>{t.contact.date}</label>
-                  <input className="input-dark" type="date" value={formState.event_date} onChange={e => setFormState(s => ({ ...s, event_date: e.target.value }))} />
-                </div>
-                <div>
-                  <label style={{ display:"block", color:"#555", fontSize:"0.58rem", letterSpacing:"0.25em", textTransform:"uppercase", marginBottom:"0.6rem" }}>{t.contact.guests}</label>
-                  <input className="input-dark" type="number" min="1" placeholder="50" value={formState.guest_count} onChange={e => setFormState(s => ({ ...s, guest_count: e.target.value }))} />
-                </div>
-              </div>
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display:"block", color:"#555", fontSize:"0.58rem", letterSpacing:"0.25em", textTransform:"uppercase", marginBottom:"0.6rem" }}>{t.contact.venue}</label>
-                <input className="input-dark" placeholder="Lake Como, Venice, Tuscany..." value={formState.venue} onChange={e => setFormState(s => ({ ...s, venue: e.target.value }))} />
-              </div>
-              <div style={{ marginBottom: "2.5rem" }}>
-                <label style={{ display:"block", color:"#555", fontSize:"0.58rem", letterSpacing:"0.25em", textTransform:"uppercase", marginBottom:"0.6rem" }}>{t.contact.message}</label>
-                <textarea className="input-dark" rows={5} placeholder={t.contact.message} value={formState.message} onChange={e => setFormState(s => ({ ...s, message: e.target.value }))} style={{ resize:"vertical" }} />
-              </div>
-              {formStatus === "error" && (
-                <p style={{ color:"#c0392b", marginBottom:"1.5rem", fontSize:"0.83rem", textAlign:"center", letterSpacing:"0.05em" }}>{t.contact.error}</p>
-              )}
-              <div style={{ textAlign: "center" }}>
-                <button type="submit" disabled={formStatus === "loading"} className="btn-primary btn-primary--lg" style={{ opacity: formStatus === "loading" ? 0.7 : 1, cursor: formStatus === "loading" ? "not-allowed" : "pointer" }}>
-                  {formStatus === "loading"
-                    ? <span style={{ display:"inline-flex", alignItems:"center", gap:8 }}><span className="spinner" />{lang === "en" ? "Sending" : "Invio"}</span>
-                    : t.contact.submit}
-                </button>
-              </div>
-            </form>
-          )}
+          </div>
         </section>
 
-        {/* ── FOOTER ── */}
-        <footer style={{ background: "#040404", borderTop: `1px solid ${BORDER}`, padding: "5rem 2rem 2.5rem" }}>
-          <div style={{ maxWidth: 1300, margin: "0 auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "3.5rem", marginBottom: "4rem" }}>
+        {/* ── CONTACT — editorial form ── */}
+        <section id="contact" style={{ padding: "clamp(5rem, 10vw, 8rem) 0", position: "relative" }}>
+          <div className="container-ed" style={{ maxWidth: 1100 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "clamp(1rem, 4vw, 3rem)", alignItems: "start", marginBottom: "4rem" }}>
+              <div className="chapter-num">04</div>
+              <div data-reveal style={{ paddingTop: "clamp(1rem, 3vw, 3rem)" }}>
+                <div className="kicker" style={{ marginBottom: "1.5rem" }}>{lang === "en" ? "Final Chapter" : "Ultimo Capitolo"}</div>
+                <h2 style={{ fontSize: "clamp(2rem, 5vw, 4rem)", lineHeight: 1, fontWeight: 400, marginBottom: "1.25rem" }}>{t.contact.title}</h2>
+                <p style={{ fontFamily: "var(--font-display), serif", fontStyle: "italic", fontSize: "clamp(1rem, 1.4vw, 1.25rem)", color: "var(--ink-soft)", maxWidth: 540, lineHeight: 1.5 }}>{t.contact.sub}</p>
+              </div>
+            </div>
+
+            {formStatus === "success" ? (
+              <div data-reveal style={{ textAlign: "center", padding: "5rem 2rem", border: "1px solid var(--ink)" }}>
+                <div style={{ fontFamily: "var(--font-display), serif", fontSize: "3rem", marginBottom: "1.5rem", color: "var(--gold)" }}>✓</div>
+                <p style={{ fontFamily: "var(--font-display), serif", fontStyle: "italic", fontSize: "1.5rem", color: "var(--ink)" }}>{t.contact.success}</p>
+                <button onClick={() => setFormStatus("idle")} className="btn-outline" style={{ marginTop: "2.5rem" }}>
+                  <span>{lang === "en" ? "Send Another" : "Invia Altra"}</span>
+                </button>
+              </div>
+            ) : (
+              <form data-reveal onSubmit={handleSubmit}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "2rem 2.5rem", marginBottom: "2rem" }}>
+                  <div>
+                    <label className="label-ed">{t.contact.name} *</label>
+                    <input className="input-ed" type="text" required placeholder={t.contact.name} value={formState.name} onChange={e => setFormState(s => ({ ...s, name: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="label-ed">{t.contact.email} *</label>
+                    <input className="input-ed" type="email" required placeholder="email@example.com" value={formState.email} onChange={e => setFormState(s => ({ ...s, email: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="label-ed">{t.contact.phone}</label>
+                    <input className="input-ed" type="tel" placeholder="+39 000 000 0000" value={formState.phone} onChange={e => setFormState(s => ({ ...s, phone: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="label-ed">{t.contact.eventType} *</label>
+                    <select className="input-ed" required value={formState.event_type} onChange={e => setFormState(s => ({ ...s, event_type: e.target.value }))}>
+                      <option value="">—</option>
+                      {t.contact.eventTypes.map(et => <option key={et} value={et}>{et}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label-ed">{t.contact.date}</label>
+                    <input className="input-ed" type="date" value={formState.event_date} onChange={e => setFormState(s => ({ ...s, event_date: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="label-ed">{t.contact.guests}</label>
+                    <input className="input-ed" type="number" min="1" placeholder="50" value={formState.guest_count} onChange={e => setFormState(s => ({ ...s, guest_count: e.target.value }))} />
+                  </div>
+                </div>
+                <div style={{ marginBottom: "2rem" }}>
+                  <label className="label-ed">{t.contact.venue}</label>
+                  <input className="input-ed" placeholder="Lake Como, Venice, Tuscany..." value={formState.venue} onChange={e => setFormState(s => ({ ...s, venue: e.target.value }))} />
+                </div>
+                <div style={{ marginBottom: "3rem" }}>
+                  <label className="label-ed">{t.contact.message}</label>
+                  <textarea className="input-ed" rows={4} placeholder={t.contact.message} value={formState.message} onChange={e => setFormState(s => ({ ...s, message: e.target.value }))} />
+                </div>
+                {formStatus === "error" && <p style={{ color: "var(--accent)", marginBottom: "1.5rem", fontSize: "0.85rem" }}>{t.contact.error}</p>}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+                  <p style={{ fontSize: "0.6rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--ink-muted)" }}>
+                    {lang === "en" ? "We reply within 24 hours" : "Rispondiamo entro 24 ore"}
+                  </p>
+                  <button type="submit" disabled={formStatus === "loading"} className="btn-ink">
+                    <span>{formStatus === "loading" ? (lang === "en" ? "Sending..." : "Invio...") : t.contact.submit}</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </section>
+
+        {/* ── FOOTER — editorial colophon ── */}
+        <footer style={{ background: "var(--ink)", color: "var(--paper)", padding: "5rem 0 2.5rem" }}>
+          <div className="container-ed">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "3rem", marginBottom: "4rem" }}>
               <div>
-                <div style={{ color: GOLD, fontSize: "1.6rem", letterSpacing: "0.2em", fontWeight: 300, marginBottom: "0.4rem" }}>MT</div>
-                <div style={{ color: "#333", fontSize: "0.5rem", letterSpacing: "0.4em", textTransform: "uppercase", marginBottom: "1.5rem" }}>Event & Wedding</div>
-                <p style={{ color: "#3a3a3a", fontSize: "0.85rem", lineHeight: 1.8, fontStyle: "italic" }}>{t.footer.tagline}</p>
+                <div style={{ fontFamily: "var(--font-display), serif", fontSize: "2rem", fontWeight: 500, marginBottom: 6 }}>M·T</div>
+                <div style={{ fontSize: "0.55rem", letterSpacing: "0.4em", textTransform: "uppercase", color: "rgba(245,241,234,0.5)", marginBottom: "1.5rem" }}>Event &amp; Wedding</div>
+                <p style={{ fontFamily: "var(--font-display), serif", fontStyle: "italic", color: "rgba(245,241,234,0.6)", fontSize: "0.95rem", lineHeight: 1.6 }}>{t.footer.tagline}</p>
               </div>
               <div>
-                <p style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.3em", textTransform: "uppercase", marginBottom: "1.25rem" }}>Contact</p>
-                {[
-                  { href:`mailto:${t.footer.email}`, text: t.footer.email },
-                  { href:"https://instagram.com/mteventwedding", text: t.footer.instagram },
-                ].map(({ href, text }) => (
-                  <a key={href} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
-                    style={{ color:"#555", fontSize:"0.84rem", display:"block", marginBottom:"0.6rem", textDecoration:"none", transition:"color 0.3s, letter-spacing 0.3s" }}
-                    onMouseEnter={e => { e.currentTarget.style.color = GOLD; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = "#555"; }}>
-                    {text}
+                <p style={{ fontSize: "0.55rem", letterSpacing: "0.4em", textTransform: "uppercase", color: "var(--gold-soft)", marginBottom: "1.25rem" }}>Contact</p>
+                {[{ href: `mailto:${t.footer.email}`, text: t.footer.email },
+                  { href: "https://instagram.com/mteventwedding", text: t.footer.instagram }].map(l => (
+                  <a key={l.href} href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
+                    style={{ display: "block", color: "rgba(245,241,234,0.7)", fontSize: "0.92rem", textDecoration: "none", marginBottom: 8, transition: "color 0.3s" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "var(--gold-soft)")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(245,241,234,0.7)")}>
+                    {l.text}
                   </a>
                 ))}
               </div>
               <div>
-                <p style={{ color: GOLD, fontSize: "0.58rem", letterSpacing: "0.3em", textTransform: "uppercase", marginBottom: "1.25rem" }}>
-                  {lang === "en" ? "Booking" : "Prenotazioni"}
+                <p style={{ fontSize: "0.55rem", letterSpacing: "0.4em", textTransform: "uppercase", color: "var(--gold-soft)", marginBottom: "1.25rem" }}>{lang === "en" ? "Index" : "Indice"}</p>
+                {navItems.map(({ key, label, num }) => (
+                  <button key={key} onClick={() => scrollTo(key)}
+                    style={{ background: "none", border: "none", padding: 0, color: "rgba(245,241,234,0.7)", fontSize: "0.92rem", cursor: "pointer", display: "block", marginBottom: 8, fontFamily: "inherit", textAlign: "left", transition: "color 0.3s" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = "var(--gold-soft)")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(245,241,234,0.7)")}>
+                    <span style={{ color: "rgba(245,241,234,0.4)", marginRight: 8, fontStyle: "italic", fontFamily: "var(--font-display), serif", fontSize: "0.7em" }}>{num}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div>
+                <p style={{ fontSize: "0.55rem", letterSpacing: "0.4em", textTransform: "uppercase", color: "var(--gold-soft)", marginBottom: "1.25rem" }}>{lang === "en" ? "Colophon" : "Colofone"}</p>
+                <p style={{ color: "rgba(245,241,234,0.7)", fontSize: "0.85rem", lineHeight: 1.7, fontFamily: "var(--font-display), serif", fontStyle: "italic" }}>
+                  Libre Bodoni · Public Sans<br />
+                  {lang === "en" ? "Volume MMXXVI" : "Volume MMXXVI"}<br />
+                  {lang === "en" ? "Composed in Italy" : "Composto in Italia"}
                 </p>
-                <p style={{ color: "#555", fontSize: "0.85rem", lineHeight: 1.8 }}>2026 &amp; 2027</p>
-                <button onClick={() => scrollTo("contact")} className="btn-ghost btn-ghost--sm" style={{ marginTop: "1.25rem" }}>
-                  {t.hero.cta}
-                </button>
               </div>
             </div>
-            <div style={{ borderTop:`1px solid #111`, paddingTop:"2rem", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"1rem" }}>
-              <p style={{ color:"#2a2a2a", fontSize:"0.7rem" }}>© {new Date().getFullYear()} MT Event &amp; Wedding. {t.footer.rights}</p>
-              <p style={{ color:"#2a2a2a", fontSize:"0.65rem", letterSpacing:"0.15em" }}>Italy</p>
+            <div style={{ borderTop: "1px solid rgba(245,241,234,0.15)", paddingTop: "2rem", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", fontSize: "0.55rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "rgba(245,241,234,0.4)" }}>
+              <span>© {new Date().getFullYear()} MT Event &amp; Wedding</span>
+              <span>{lang === "en" ? "All rights reserved." : "Tutti i diritti riservati."}</span>
+              <span>{lang === "en" ? "Italy" : "Italia"}</span>
             </div>
           </div>
         </footer>
@@ -910,146 +727,42 @@ export default function Home() {
 
       {/* ── LIGHTBOX ── */}
       {lightboxIdx !== null && (
-        <div
-          style={{ position:"fixed", inset:0, zIndex:200, background:"rgba(0,0,0,0.97)", display:"flex", alignItems:"center", justifyContent:"center", animation:"lightboxBgIn 0.3s ease" }}
-          onClick={() => setLightboxIdx(null)}
-        >
-          {/* Close */}
-          <button onClick={() => setLightboxIdx(null)}
-            style={{ position:"absolute", top:24, right:28, background:"none", border:"none", color:"#888", cursor:"pointer", fontSize:"1rem", letterSpacing:"0.15em", textTransform:"uppercase", display:"flex", alignItems:"center", gap:8, transition:"color 0.3s" }}
-            onMouseEnter={e => (e.currentTarget.style.color = GOLD)}
-            onMouseLeave={e => (e.currentTarget.style.color = "#888")}>
-            <span style={{ fontSize:"0.55rem" }}>ESC</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        <div onClick={() => setLightboxIdx(null)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(15,14,12,0.97)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem", animation: "fadeIn 0.3s ease" }}>
+          <button onClick={() => setLightboxIdx(null)} style={{ position: "absolute", top: 24, right: 28, background: "none", border: "1px solid rgba(245,241,234,0.4)", color: "var(--paper)", cursor: "pointer", padding: "8px 14px", fontSize: "0.6rem", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+            Close · ESC
           </button>
-
-          {/* Counter */}
-          <div style={{ position:"absolute", top:28, left:"50%", transform:"translateX(-50%)", color:"#555", fontSize:"0.58rem", letterSpacing:"0.3em" }}>
-            {lightboxIdx+1} / {galleryPhotos.length}
+          <div style={{ position: "absolute", top: 32, left: "50%", transform: "translateX(-50%)", color: "rgba(245,241,234,0.55)", fontSize: "0.55rem", letterSpacing: "0.3em", fontVariantNumeric: "tabular-nums" }}>
+            {String(lightboxIdx + 1).padStart(3, "0")} / {String(allPhotos.length).padStart(3, "0")}
           </div>
-
-          {/* Prev */}
-          <button onClick={e => { e.stopPropagation(); setLightboxIdx(i => ((i!)-1+galleryPhotos.length) % galleryPhotos.length); }}
-            style={{ position:"absolute", left:24, top:"50%", transform:"translateY(-50%)", background:"rgba(20,20,22,0.6)", border:`1px solid rgba(255,255,255,0.1)`, color:"#aaa", cursor:"pointer", width:48, height:48, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s", borderRadius:999, backdropFilter:"blur(12px)" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor=GOLD; e.currentTarget.style.color=GOLD; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor="#222"; e.currentTarget.style.color="#888"; }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+          <button onClick={e => { e.stopPropagation(); setLightboxIdx(i => ((i!) - 1 + allPhotos.length) % allPhotos.length); }}
+            style={{ position: "absolute", left: 24, top: "50%", transform: "translateY(-50%)", background: "none", border: "1px solid rgba(245,241,234,0.3)", padding: 16, color: "var(--paper)", cursor: "pointer" }}>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M13 5H1m0 0l4 4M1 5l4-4" stroke="currentColor" strokeWidth="1"/></svg>
           </button>
-
-          {/* Image */}
-          <div onClick={e => e.stopPropagation()} style={{ animation:"lightboxImgIn 0.35s cubic-bezier(0.16,1,0.3,1)" }} key={lightboxIdx}>
-            <Image src={`/images/${galleryPhotos[lightboxIdx]}`} alt="" width={1200} height={1600}
-              style={{ maxWidth:"82vw", maxHeight:"85vh", width:"auto", height:"auto", objectFit:"contain", display:"block" }} />
+          <div onClick={e => e.stopPropagation()} key={lightboxIdx} style={{ animation: "lbIn 0.4s var(--ease)" }}>
+            <Image src={`/images/${allPhotos[lightboxIdx]}`} alt="" width={1200} height={1600} style={{ maxWidth: "82vw", maxHeight: "82vh", width: "auto", height: "auto", objectFit: "contain" }} />
           </div>
-
-          {/* Next */}
-          <button onClick={e => { e.stopPropagation(); setLightboxIdx(i => ((i!)+1) % galleryPhotos.length); }}
-            style={{ position:"absolute", right:24, top:"50%", transform:"translateY(-50%)", background:"rgba(20,20,22,0.6)", border:`1px solid rgba(255,255,255,0.1)`, color:"#aaa", cursor:"pointer", width:48, height:48, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s", borderRadius:999, backdropFilter:"blur(12px)" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor=GOLD; e.currentTarget.style.color=GOLD; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor="#222"; e.currentTarget.style.color="#888"; }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
+          <button onClick={e => { e.stopPropagation(); setLightboxIdx(i => ((i!) + 1) % allPhotos.length); }}
+            style={{ position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)", background: "none", border: "1px solid rgba(245,241,234,0.3)", padding: 16, color: "var(--paper)", cursor: "pointer" }}>
+            <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M1 5h12m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="1"/></svg>
           </button>
-
-          {/* Thumbnail strip */}
-          <div style={{ position:"absolute", bottom:0, left:0, right:0, display:"flex", justifyContent:"center", padding:"1rem", gap:4, overflowX:"auto" }}>
-            {galleryPhotos.map((p, i) => (
-              <div key={i} onClick={e => { e.stopPropagation(); setLightboxIdx(i); }}
-                style={{ width:42, height:30, flexShrink:0, overflow:"hidden", cursor:"pointer", opacity:i===lightboxIdx?1:0.35, border:i===lightboxIdx?`1px solid ${GOLD}`:"1px solid transparent", transition:"all 0.3s", borderRadius:6 }}>
-                <Image src={`/images/${p}`} alt="" width={80} height={60} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-              </div>
-            ))}
-          </div>
         </div>
       )}
 
-      {/* ── Global CSS ── */}
       <style>{`
-        /* Language transition — staggered fade + soft blur */
-        .lang-out { animation: langOut 0.32s cubic-bezier(0.4, 0, 1, 1) forwards; }
-        .lang-in  { animation: langIn  0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes langOut {
-          0%   { opacity: 1; filter: blur(0);    transform: translateY(0)    scale(1); }
-          100% { opacity: 0; filter: blur(8px);  transform: translateY(-6px) scale(0.994); }
-        }
-        @keyframes langIn {
-          0%   { opacity: 0; filter: blur(10px); transform: translateY(10px) scale(1.006); }
-          60%  { opacity: 1;                                                                }
-          100% { opacity: 1; filter: blur(0);    transform: translateY(0)    scale(1);     }
-        }
-
-        /* Scroll reveal */
-        [data-reveal] {
-          opacity: 0;
-          transform: translateY(28px);
-          transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
-        }
-        [data-reveal].revealed { opacity: 1; transform: translateY(0); }
-        [data-reveal][data-d="1"] { transition-delay: 0.1s; }
-        [data-reveal][data-d="2"] { transition-delay: 0.22s; }
-        [data-reveal][data-d="3"] { transition-delay: 0.34s; }
-        [data-reveal][data-d="4"] { transition-delay: 0.46s; }
-
-        /* Hero entrance */
-        @keyframes heroFadeUp {
-          from { opacity: 0; transform: translateY(22px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Lightbox */
-        @keyframes lightboxBgIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes lightboxImgIn {
-          from { opacity: 0; transform: scale(0.94) translateY(8px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0);   }
-        }
-
-        /* Scroll arrow pulse */
-        @keyframes arrowPulse {
-          0%, 100% { opacity: 0.4; transform: translateY(0); }
-          50%       { opacity: 1;   transform: translateY(6px); }
-        }
-
-        /* Spinner */
-        .spinner {
-          display: inline-block; width: 12px; height: 12px;
-          border: 1.5px solid rgba(0,0,0,0.3);
-          border-top-color: #000;
-          border-radius: 50%;
-          animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Responsive */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes lbIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .lang-out { animation: lOut 0.34s var(--ease-sharp) forwards; }
+        .lang-in  { animation: lIn  0.75s var(--ease) forwards; }
+        @keyframes lOut { to { opacity: 0; filter: blur(8px); transform: translateY(-6px); } }
+        @keyframes lIn  { from { opacity: 0; filter: blur(10px); transform: translateY(10px); } 60% { opacity: 1; } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
+        .testimonial-fade { animation: tFade 0.7s var(--ease); }
+        @keyframes tFade { from { opacity: 0; transform: translateY(14px); filter: blur(6px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
         @media (max-width: 880px) {
-          #desktop-nav { display: none !important; }
-          #mobile-btn  { display: flex !important; }
+          #desk-nav { display: none !important; }
+          #mob-btn  { display: block !important; }
+          .hide-mobile-col { grid-column: span 12 !important; max-width: 480px; }
+          .about-body { grid-column: span 12 !important; }
         }
-        @media (min-width: 881px) {
-          #desktop-nav { display: flex !important; }
-          #mobile-btn  { display: none !important; }
-        }
-
-        /* Service card hover accent lines */
-        div:hover > .card-accent-top  { width: 100% !important; }
-        div:hover > .card-accent-left { height: 100% !important; }
-
-        /* Input date color fix */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-          filter: invert(0.4);
-        }
-
-        /* Gallery thumbnail scrollbar */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
       `}</style>
     </>
   );
